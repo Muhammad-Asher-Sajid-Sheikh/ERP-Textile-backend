@@ -44,6 +44,7 @@ export type PreProductionSampleMinAggregateOutputType = {
   rackId: string | null
   qcStatus: $Enums.InternalQcStatus | null
   isApproved: boolean | null
+  isLocked: boolean | null
   dispatchDate: Date | null
   receivedDate: Date | null
   status: $Enums.CustomerSampleStatus | null
@@ -63,6 +64,7 @@ export type PreProductionSampleMaxAggregateOutputType = {
   rackId: string | null
   qcStatus: $Enums.InternalQcStatus | null
   isApproved: boolean | null
+  isLocked: boolean | null
   dispatchDate: Date | null
   receivedDate: Date | null
   status: $Enums.CustomerSampleStatus | null
@@ -82,6 +84,7 @@ export type PreProductionSampleCountAggregateOutputType = {
   rackId: number
   qcStatus: number
   isApproved: number
+  isLocked: number
   dispatchDate: number
   receivedDate: number
   status: number
@@ -111,6 +114,7 @@ export type PreProductionSampleMinAggregateInputType = {
   rackId?: true
   qcStatus?: true
   isApproved?: true
+  isLocked?: true
   dispatchDate?: true
   receivedDate?: true
   status?: true
@@ -130,6 +134,7 @@ export type PreProductionSampleMaxAggregateInputType = {
   rackId?: true
   qcStatus?: true
   isApproved?: true
+  isLocked?: true
   dispatchDate?: true
   receivedDate?: true
   status?: true
@@ -149,6 +154,7 @@ export type PreProductionSampleCountAggregateInputType = {
   rackId?: true
   qcStatus?: true
   isApproved?: true
+  isLocked?: true
   dispatchDate?: true
   receivedDate?: true
   status?: true
@@ -255,6 +261,7 @@ export type PreProductionSampleGroupByOutputType = {
   rackId: string
   qcStatus: $Enums.InternalQcStatus
   isApproved: boolean
+  isLocked: boolean
   dispatchDate: Date | null
   receivedDate: Date | null
   status: $Enums.CustomerSampleStatus
@@ -297,6 +304,7 @@ export type PreProductionSampleWhereInput = {
   rackId?: Prisma.StringFilter<"PreProductionSample"> | string
   qcStatus?: Prisma.EnumInternalQcStatusFilter<"PreProductionSample"> | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFilter<"PreProductionSample"> | boolean
+  isLocked?: Prisma.BoolFilter<"PreProductionSample"> | boolean
   dispatchDate?: Prisma.DateTimeNullableFilter<"PreProductionSample"> | Date | string | null
   receivedDate?: Prisma.DateTimeNullableFilter<"PreProductionSample"> | Date | string | null
   status?: Prisma.EnumCustomerSampleStatusFilter<"PreProductionSample"> | $Enums.CustomerSampleStatus
@@ -316,6 +324,7 @@ export type PreProductionSampleOrderByWithRelationInput = {
   rackId?: Prisma.SortOrder
   qcStatus?: Prisma.SortOrder
   isApproved?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
   dispatchDate?: Prisma.SortOrderInput | Prisma.SortOrder
   receivedDate?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -338,6 +347,7 @@ export type PreProductionSampleWhereUniqueInput = Prisma.AtLeast<{
   rackId?: Prisma.StringFilter<"PreProductionSample"> | string
   qcStatus?: Prisma.EnumInternalQcStatusFilter<"PreProductionSample"> | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFilter<"PreProductionSample"> | boolean
+  isLocked?: Prisma.BoolFilter<"PreProductionSample"> | boolean
   dispatchDate?: Prisma.DateTimeNullableFilter<"PreProductionSample"> | Date | string | null
   receivedDate?: Prisma.DateTimeNullableFilter<"PreProductionSample"> | Date | string | null
   status?: Prisma.EnumCustomerSampleStatusFilter<"PreProductionSample"> | $Enums.CustomerSampleStatus
@@ -357,6 +367,7 @@ export type PreProductionSampleOrderByWithAggregationInput = {
   rackId?: Prisma.SortOrder
   qcStatus?: Prisma.SortOrder
   isApproved?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
   dispatchDate?: Prisma.SortOrderInput | Prisma.SortOrder
   receivedDate?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -384,6 +395,7 @@ export type PreProductionSampleScalarWhereWithAggregatesInput = {
   rackId?: Prisma.StringWithAggregatesFilter<"PreProductionSample"> | string
   qcStatus?: Prisma.EnumInternalQcStatusWithAggregatesFilter<"PreProductionSample"> | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolWithAggregatesFilter<"PreProductionSample"> | boolean
+  isLocked?: Prisma.BoolWithAggregatesFilter<"PreProductionSample"> | boolean
   dispatchDate?: Prisma.DateTimeNullableWithAggregatesFilter<"PreProductionSample"> | Date | string | null
   receivedDate?: Prisma.DateTimeNullableWithAggregatesFilter<"PreProductionSample"> | Date | string | null
   status?: Prisma.EnumCustomerSampleStatusWithAggregatesFilter<"PreProductionSample"> | $Enums.CustomerSampleStatus
@@ -403,6 +415,7 @@ export type PreProductionSampleCreateInput = {
   rackId: string
   qcStatus?: $Enums.InternalQcStatus
   isApproved?: boolean
+  isLocked?: boolean
   dispatchDate?: Date | string | null
   receivedDate?: Date | string | null
   status?: $Enums.CustomerSampleStatus
@@ -422,6 +435,7 @@ export type PreProductionSampleUncheckedCreateInput = {
   rackId: string
   qcStatus?: $Enums.InternalQcStatus
   isApproved?: boolean
+  isLocked?: boolean
   dispatchDate?: Date | string | null
   receivedDate?: Date | string | null
   status?: $Enums.CustomerSampleStatus
@@ -441,6 +455,7 @@ export type PreProductionSampleUpdateInput = {
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dispatchDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   receivedDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumCustomerSampleStatusFieldUpdateOperationsInput | $Enums.CustomerSampleStatus
@@ -460,6 +475,7 @@ export type PreProductionSampleUncheckedUpdateInput = {
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dispatchDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   receivedDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumCustomerSampleStatusFieldUpdateOperationsInput | $Enums.CustomerSampleStatus
@@ -479,6 +495,7 @@ export type PreProductionSampleCreateManyInput = {
   rackId: string
   qcStatus?: $Enums.InternalQcStatus
   isApproved?: boolean
+  isLocked?: boolean
   dispatchDate?: Date | string | null
   receivedDate?: Date | string | null
   status?: $Enums.CustomerSampleStatus
@@ -498,6 +515,7 @@ export type PreProductionSampleUpdateManyMutationInput = {
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dispatchDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   receivedDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumCustomerSampleStatusFieldUpdateOperationsInput | $Enums.CustomerSampleStatus
@@ -517,6 +535,7 @@ export type PreProductionSampleUncheckedUpdateManyInput = {
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dispatchDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   receivedDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumCustomerSampleStatusFieldUpdateOperationsInput | $Enums.CustomerSampleStatus
@@ -536,6 +555,7 @@ export type PreProductionSampleCountOrderByAggregateInput = {
   rackId?: Prisma.SortOrder
   qcStatus?: Prisma.SortOrder
   isApproved?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
   dispatchDate?: Prisma.SortOrder
   receivedDate?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -559,6 +579,7 @@ export type PreProductionSampleMaxOrderByAggregateInput = {
   rackId?: Prisma.SortOrder
   qcStatus?: Prisma.SortOrder
   isApproved?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
   dispatchDate?: Prisma.SortOrder
   receivedDate?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -578,6 +599,7 @@ export type PreProductionSampleMinOrderByAggregateInput = {
   rackId?: Prisma.SortOrder
   qcStatus?: Prisma.SortOrder
   isApproved?: Prisma.SortOrder
+  isLocked?: Prisma.SortOrder
   dispatchDate?: Prisma.SortOrder
   receivedDate?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -619,6 +641,7 @@ export type PreProductionSampleSelect<ExtArgs extends runtime.Types.Extensions.I
   rackId?: boolean
   qcStatus?: boolean
   isApproved?: boolean
+  isLocked?: boolean
   dispatchDate?: boolean
   receivedDate?: boolean
   status?: boolean
@@ -638,6 +661,7 @@ export type PreProductionSampleSelectCreateManyAndReturn<ExtArgs extends runtime
   rackId?: boolean
   qcStatus?: boolean
   isApproved?: boolean
+  isLocked?: boolean
   dispatchDate?: boolean
   receivedDate?: boolean
   status?: boolean
@@ -657,6 +681,7 @@ export type PreProductionSampleSelectUpdateManyAndReturn<ExtArgs extends runtime
   rackId?: boolean
   qcStatus?: boolean
   isApproved?: boolean
+  isLocked?: boolean
   dispatchDate?: boolean
   receivedDate?: boolean
   status?: boolean
@@ -676,6 +701,7 @@ export type PreProductionSampleSelectScalar = {
   rackId?: boolean
   qcStatus?: boolean
   isApproved?: boolean
+  isLocked?: boolean
   dispatchDate?: boolean
   receivedDate?: boolean
   status?: boolean
@@ -685,7 +711,7 @@ export type PreProductionSampleSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PreProductionSampleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "icnNo" | "sampleType" | "ppsVersion" | "owiId" | "owi" | "rackId" | "qcStatus" | "isApproved" | "dispatchDate" | "receivedDate" | "status" | "reasonCategory" | "remarks" | "createdAt" | "updatedAt", ExtArgs["result"]["preProductionSample"]>
+export type PreProductionSampleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "icnNo" | "sampleType" | "ppsVersion" | "owiId" | "owi" | "rackId" | "qcStatus" | "isApproved" | "isLocked" | "dispatchDate" | "receivedDate" | "status" | "reasonCategory" | "remarks" | "createdAt" | "updatedAt", ExtArgs["result"]["preProductionSample"]>
 
 export type $PreProductionSamplePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PreProductionSample"
@@ -700,6 +726,7 @@ export type $PreProductionSamplePayload<ExtArgs extends runtime.Types.Extensions
     rackId: string
     qcStatus: $Enums.InternalQcStatus
     isApproved: boolean
+    isLocked: boolean
     dispatchDate: Date | null
     receivedDate: Date | null
     status: $Enums.CustomerSampleStatus
@@ -1139,6 +1166,7 @@ export interface PreProductionSampleFieldRefs {
   readonly rackId: Prisma.FieldRef<"PreProductionSample", 'String'>
   readonly qcStatus: Prisma.FieldRef<"PreProductionSample", 'InternalQcStatus'>
   readonly isApproved: Prisma.FieldRef<"PreProductionSample", 'Boolean'>
+  readonly isLocked: Prisma.FieldRef<"PreProductionSample", 'Boolean'>
   readonly dispatchDate: Prisma.FieldRef<"PreProductionSample", 'DateTime'>
   readonly receivedDate: Prisma.FieldRef<"PreProductionSample", 'DateTime'>
   readonly status: Prisma.FieldRef<"PreProductionSample", 'CustomerSampleStatus'>

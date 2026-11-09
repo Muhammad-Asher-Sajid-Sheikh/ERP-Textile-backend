@@ -139,6 +139,7 @@ export const PreProductionSampleScalarFieldEnum = {
   rackId: 'rackId',
   qcStatus: 'qcStatus',
   isApproved: 'isApproved',
+  isLocked: 'isLocked',
   dispatchDate: 'dispatchDate',
   receivedDate: 'receivedDate',
   status: 'status',

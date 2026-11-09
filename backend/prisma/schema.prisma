@@ -139,7 +139,8 @@ model PreProductionSample {
   rackId          String               // Storage rack reference (e.g., "1", "R-02")
   qcStatus        InternalQcStatus     @default(PENDING)
   isApproved      Boolean              @default(false) // Internal Management Sign-off
-  
+  isLocked        Boolean              @default(false)
+
   dispatchDate    DateTime?
   receivedDate    DateTime?
   
