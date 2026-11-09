@@ -41,3 +41,43 @@ export const AuditActionType = {
 } as const
 
 export type AuditActionType = (typeof AuditActionType)[keyof typeof AuditActionType]
+
+
+export const SampleType = {
+  APPROVAL_SAMPLE: 'APPROVAL_SAMPLE',
+  PHOTO_SAMPLE: 'PHOTO_SAMPLE',
+  PPS: 'PPS',
+  PACKING_SAMPLE: 'PACKING_SAMPLE'
+} as const
+
+export type SampleType = (typeof SampleType)[keyof typeof SampleType]
+
+
+export const InternalQcStatus = {
+  PENDING: 'PENDING',
+  PASSED: 'PASSED',
+  FAILED: 'FAILED'
+} as const
+
+export type InternalQcStatus = (typeof InternalQcStatus)[keyof typeof InternalQcStatus]
+
+
+export const CustomerSampleStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  DISAPPROVED: 'DISAPPROVED'
+} as const
+
+export type CustomerSampleStatus = (typeof CustomerSampleStatus)[keyof typeof CustomerSampleStatus]
+
+
+export const ReasonCategory = {
+  SHADE_MISMATCH: 'SHADE_MISMATCH',
+  MEASUREMENT_DEFECT: 'MEASUREMENT_DEFECT',
+  CONSTRUCTION_ERROR: 'CONSTRUCTION_ERROR',
+  FABRIC_QUALITY: 'FABRIC_QUALITY',
+  TRIM_PACKING_DEFECT: 'TRIM_PACKING_DEFECT',
+  OTHER: 'OTHER'
+} as const
+
+export type ReasonCategory = (typeof ReasonCategory)[keyof typeof ReasonCategory]

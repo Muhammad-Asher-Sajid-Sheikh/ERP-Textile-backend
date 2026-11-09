@@ -89,7 +89,7 @@ model AuditLog {
 
 model OrderToken{
   id            String            @id @default(uuid())
-  productFamilies ProductFamily[] // Back-relation field
+  //productFamilies ProductFamily[] // Back-relation field
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now())
@@ -97,21 +97,60 @@ model OrderToken{
 
 // MERCHANDISE Department
 
-model ProductFamily{
-  id            String            @id @default(uuid())
+enum SampleType {
+  APPROVAL_SAMPLE
+  PHOTO_SAMPLE
+  PPS
+  PACKING_SAMPLE
 }
 
-model Products{
-  id            String            @id @default(uuid())
-  orderId       String// Scalar field storing the foreign key
-  order         OrderToken  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+enum InternalQcStatus {
+  PENDING
+  PASSED
+  FAILED
+}
 
-  productType   String
-  productList   String?
+enum CustomerSampleStatus {
+  PENDING
+  APPROVED
+  DISAPPROVED
+}
 
-  normalMaterial  String?
-  productStage    String?
+enum ReasonCategory {
+  SHADE_MISMATCH
+  MEASUREMENT_DEFECT
+  CONSTRUCTION_ERROR
+  FABRIC_QUALITY
+  TRIM_PACKING_DEFECT
+  OTHER
+}
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
+//PPS
+model PreProductionSample {
+  id              String               @id @default(uuid())
+  icnNo           String
+  sampleType      SampleType           @default(PPS)
+  ppsVersion      Int                  @default(1)
+  
+  // Relational Link to OWI
+  owiId           String
+  owi             String  //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
+
+  rackId          String               // Storage rack reference (e.g., "1", "R-02")
+  qcStatus        InternalQcStatus     @default(PENDING)
+  isApproved      Boolean              @default(false) // Internal Management Sign-off
+  
+  dispatchDate    DateTime?
+  receivedDate    DateTime?
+  
+  status          CustomerSampleStatus @default(PENDING) // Customer Feedback Status
+  reasonCategory  ReasonCategory?
+  remarks         String?              @db.Text
+
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([icnNo])
+  @@index([owiId])
+  @@map("pre_production_samples")
 }

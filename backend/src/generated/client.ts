@@ -56,3 +56,13 @@ export type RefreshToken = Prisma.RefreshTokenModel
  * 
  */
 export type AuditLog = Prisma.AuditLogModel
+/**
+ * Model OrderToken
+ * 
+ */
+export type OrderToken = Prisma.OrderTokenModel
+/**
+ * Model PreProductionSample
+ * 
+ */
+export type PreProductionSample = Prisma.PreProductionSampleModel

@@ -226,6 +226,74 @@ export type EnumAuditActionTypeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumAuditActionTypeFilter<$PrismaModel>
 }
 
+export type EnumSampleTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.SampleType | Prisma.EnumSampleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSampleTypeFilter<$PrismaModel> | $Enums.SampleType
+}
+
+export type EnumInternalQcStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.InternalQcStatus | Prisma.EnumInternalQcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInternalQcStatusFilter<$PrismaModel> | $Enums.InternalQcStatus
+}
+
+export type EnumCustomerSampleStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.CustomerSampleStatus | Prisma.EnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCustomerSampleStatusFilter<$PrismaModel> | $Enums.CustomerSampleStatus
+}
+
+export type EnumReasonCategoryNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReasonCategory | Prisma.EnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel> | $Enums.ReasonCategory | null
+}
+
+export type EnumSampleTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SampleType | Prisma.EnumSampleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSampleTypeWithAggregatesFilter<$PrismaModel> | $Enums.SampleType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSampleTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSampleTypeFilter<$PrismaModel>
+}
+
+export type EnumInternalQcStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InternalQcStatus | Prisma.EnumInternalQcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInternalQcStatusWithAggregatesFilter<$PrismaModel> | $Enums.InternalQcStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInternalQcStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInternalQcStatusFilter<$PrismaModel>
+}
+
+export type EnumCustomerSampleStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CustomerSampleStatus | Prisma.EnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCustomerSampleStatusWithAggregatesFilter<$PrismaModel> | $Enums.CustomerSampleStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCustomerSampleStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCustomerSampleStatusFilter<$PrismaModel>
+}
+
+export type EnumReasonCategoryNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReasonCategory | Prisma.EnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumReasonCategoryNullableWithAggregatesFilter<$PrismaModel> | $Enums.ReasonCategory | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -449,6 +517,74 @@ export type NestedEnumAuditActionTypeWithAggregatesFilter<$PrismaModel = never> 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAuditActionTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAuditActionTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumSampleTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.SampleType | Prisma.EnumSampleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSampleTypeFilter<$PrismaModel> | $Enums.SampleType
+}
+
+export type NestedEnumInternalQcStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.InternalQcStatus | Prisma.EnumInternalQcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInternalQcStatusFilter<$PrismaModel> | $Enums.InternalQcStatus
+}
+
+export type NestedEnumCustomerSampleStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.CustomerSampleStatus | Prisma.EnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCustomerSampleStatusFilter<$PrismaModel> | $Enums.CustomerSampleStatus
+}
+
+export type NestedEnumReasonCategoryNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReasonCategory | Prisma.EnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel> | $Enums.ReasonCategory | null
+}
+
+export type NestedEnumSampleTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SampleType | Prisma.EnumSampleTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SampleType[] | Prisma.ListEnumSampleTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSampleTypeWithAggregatesFilter<$PrismaModel> | $Enums.SampleType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSampleTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSampleTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumInternalQcStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InternalQcStatus | Prisma.EnumInternalQcStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InternalQcStatus[] | Prisma.ListEnumInternalQcStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInternalQcStatusWithAggregatesFilter<$PrismaModel> | $Enums.InternalQcStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInternalQcStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInternalQcStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumCustomerSampleStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CustomerSampleStatus | Prisma.EnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CustomerSampleStatus[] | Prisma.ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCustomerSampleStatusWithAggregatesFilter<$PrismaModel> | $Enums.CustomerSampleStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCustomerSampleStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCustomerSampleStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumReasonCategoryNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReasonCategory | Prisma.EnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ReasonCategory[] | Prisma.ListEnumReasonCategoryFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumReasonCategoryNullableWithAggregatesFilter<$PrismaModel> | $Enums.ReasonCategory | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel>
 }
 
 

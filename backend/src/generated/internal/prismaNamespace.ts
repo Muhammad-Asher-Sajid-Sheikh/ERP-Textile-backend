@@ -386,7 +386,9 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   RefreshToken: 'RefreshToken',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  OrderToken: 'OrderToken',
+  PreProductionSample: 'PreProductionSample'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -402,7 +404,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "refreshToken" | "auditLog"
+    modelProps: "user" | "refreshToken" | "auditLog" | "orderToken" | "preProductionSample"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +630,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OrderToken: {
+      payload: Prisma.$OrderTokenPayload<ExtArgs>
+      fields: Prisma.OrderTokenFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderTokenFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderTokenFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>
+        }
+        findFirst: {
+          args: Prisma.OrderTokenFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderTokenFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>
+        }
+        findMany: {
+          args: Prisma.OrderTokenFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>[]
+        }
+        create: {
+          args: Prisma.OrderTokenCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>
+        }
+        createMany: {
+          args: Prisma.OrderTokenCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderTokenCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>[]
+        }
+        delete: {
+          args: Prisma.OrderTokenDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>
+        }
+        update: {
+          args: Prisma.OrderTokenUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderTokenDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderTokenUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderTokenUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderTokenUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderTokenPayload>
+        }
+        aggregate: {
+          args: Prisma.OrderTokenAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderToken>
+        }
+        groupBy: {
+          args: Prisma.OrderTokenGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderTokenGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderTokenCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderTokenCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreProductionSample: {
+      payload: Prisma.$PreProductionSamplePayload<ExtArgs>
+      fields: Prisma.PreProductionSampleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreProductionSampleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreProductionSampleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>
+        }
+        findFirst: {
+          args: Prisma.PreProductionSampleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreProductionSampleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>
+        }
+        findMany: {
+          args: Prisma.PreProductionSampleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>[]
+        }
+        create: {
+          args: Prisma.PreProductionSampleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>
+        }
+        createMany: {
+          args: Prisma.PreProductionSampleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreProductionSampleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>[]
+        }
+        delete: {
+          args: Prisma.PreProductionSampleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>
+        }
+        update: {
+          args: Prisma.PreProductionSampleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>
+        }
+        deleteMany: {
+          args: Prisma.PreProductionSampleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreProductionSampleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreProductionSampleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>[]
+        }
+        upsert: {
+          args: Prisma.PreProductionSampleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreProductionSamplePayload>
+        }
+        aggregate: {
+          args: Prisma.PreProductionSampleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreProductionSample>
+        }
+        groupBy: {
+          args: Prisma.PreProductionSampleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreProductionSampleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreProductionSampleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreProductionSampleCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -711,6 +861,37 @@ export const AuditLogScalarFieldEnum = {
 } as const
 
 export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
+export const OrderTokenScalarFieldEnum = {
+  id: 'id',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderTokenScalarFieldEnum = (typeof OrderTokenScalarFieldEnum)[keyof typeof OrderTokenScalarFieldEnum]
+
+
+export const PreProductionSampleScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  sampleType: 'sampleType',
+  ppsVersion: 'ppsVersion',
+  owiId: 'owiId',
+  owi: 'owi',
+  rackId: 'rackId',
+  qcStatus: 'qcStatus',
+  isApproved: 'isApproved',
+  dispatchDate: 'dispatchDate',
+  receivedDate: 'receivedDate',
+  status: 'status',
+  reasonCategory: 'reasonCategory',
+  remarks: 'remarks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PreProductionSampleScalarFieldEnum = (typeof PreProductionSampleScalarFieldEnum)[keyof typeof PreProductionSampleScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -831,6 +1012,62 @@ export type EnumAuditActionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'AuditActionType[]'
  */
 export type ListEnumAuditActionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuditActionType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'SampleType'
+ */
+export type EnumSampleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SampleType'>
+    
+
+
+/**
+ * Reference to a field of type 'SampleType[]'
+ */
+export type ListEnumSampleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SampleType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'InternalQcStatus'
+ */
+export type EnumInternalQcStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InternalQcStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'InternalQcStatus[]'
+ */
+export type ListEnumInternalQcStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InternalQcStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CustomerSampleStatus'
+ */
+export type EnumCustomerSampleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerSampleStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'CustomerSampleStatus[]'
+ */
+export type ListEnumCustomerSampleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerSampleStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ReasonCategory'
+ */
+export type EnumReasonCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReasonCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'ReasonCategory[]'
+ */
+export type ListEnumReasonCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReasonCategory[]'>
     
 
 
@@ -960,6 +1197,8 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   refreshToken?: Prisma.RefreshTokenOmit
   auditLog?: Prisma.AuditLogOmit
+  orderToken?: Prisma.OrderTokenOmit
+  preProductionSample?: Prisma.PreProductionSampleOmit
 }
 
 /* Types for Logging */

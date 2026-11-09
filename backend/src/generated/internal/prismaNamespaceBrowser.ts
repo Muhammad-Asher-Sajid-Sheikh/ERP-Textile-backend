@@ -53,7 +53,9 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   RefreshToken: 'RefreshToken',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  OrderToken: 'OrderToken',
+  PreProductionSample: 'PreProductionSample'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -116,6 +118,37 @@ export const AuditLogScalarFieldEnum = {
 } as const
 
 export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
+export const OrderTokenScalarFieldEnum = {
+  id: 'id',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderTokenScalarFieldEnum = (typeof OrderTokenScalarFieldEnum)[keyof typeof OrderTokenScalarFieldEnum]
+
+
+export const PreProductionSampleScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  sampleType: 'sampleType',
+  ppsVersion: 'ppsVersion',
+  owiId: 'owiId',
+  owi: 'owi',
+  rackId: 'rackId',
+  qcStatus: 'qcStatus',
+  isApproved: 'isApproved',
+  dispatchDate: 'dispatchDate',
+  receivedDate: 'receivedDate',
+  status: 'status',
+  reasonCategory: 'reasonCategory',
+  remarks: 'remarks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PreProductionSampleScalarFieldEnum = (typeof PreProductionSampleScalarFieldEnum)[keyof typeof PreProductionSampleScalarFieldEnum]
 
 
 export const SortOrder = {
