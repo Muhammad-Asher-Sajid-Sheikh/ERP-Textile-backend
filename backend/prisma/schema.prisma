@@ -155,3 +155,68 @@ model PreProductionSample {
   @@index([owiId])
   @@map("pre_production_samples")
 }
+
+
+// T&A Planning
+enum StageStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+enum Department {
+  MERCHANDISING
+  SCM
+  PRODUCTION
+  QUALITY
+  ACCOUNTS
+}
+
+// 1. Parent T&A Header Model
+model TimeActionPlan {
+  id                 String           @id @default(uuid())
+  icnNo              String
+  owiId              String
+  owi                String           //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
+  
+  orderDate          DateTime
+  shipmentDeadline   DateTime
+  totalLeadTimeDays  Int              // Auto-calculated total duration
+  
+  // Relation: One T&A plan has many stages stored in a proper table
+  stages             TimeActionStage[] 
+  
+  taVersion          Int              @default(1)
+  isLocked           Boolean          @default(false)
+  criticalPathFlag   Boolean          @default(false)
+
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([icnNo])
+  @@index([owiId])
+  @@map("time_action_plans")
+}
+
+// 2. Child Stage Model (Enforces Enums & Individual Database Rows)
+model TimeActionStage {
+  id                    String         @id @default(uuid())
+  timeActionPlanId      String
+  timeActionPlan        TimeActionPlan @relation(fields: [timeActionPlanId], references: [id], onDelete: Cascade)
+  
+  stageName             String
+  plannedStartDate      DateTime?
+  plannedEndDate        DateTime?
+  actualStartDate       DateTime?
+  actualEndDate         DateTime?
+  
+  // Optional until assigned during T&A planning
+  responsibleDepartment Department?     
+  status                StageStatus    @default(PENDING)
+
+  @@index([timeActionPlanId])
+  @@index([status])
+  @@index([responsibleDepartment])
+  @@map("time_action_stages")
+}

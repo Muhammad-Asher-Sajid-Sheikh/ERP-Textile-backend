@@ -294,6 +294,40 @@ export type EnumReasonCategoryNullableWithAggregatesFilter<$PrismaModel = never>
   _max?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel>
 }
 
+export type EnumDepartmentNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.Department | Prisma.EnumDepartmentFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDepartmentNullableFilter<$PrismaModel> | $Enums.Department | null
+}
+
+export type EnumStageStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.StageStatus | Prisma.EnumStageStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStageStatusFilter<$PrismaModel> | $Enums.StageStatus
+}
+
+export type EnumDepartmentNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Department | Prisma.EnumDepartmentFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDepartmentNullableWithAggregatesFilter<$PrismaModel> | $Enums.Department | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDepartmentNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDepartmentNullableFilter<$PrismaModel>
+}
+
+export type EnumStageStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StageStatus | Prisma.EnumStageStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStageStatusWithAggregatesFilter<$PrismaModel> | $Enums.StageStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStageStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStageStatusFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -585,6 +619,40 @@ export type NestedEnumReasonCategoryNullableWithAggregatesFilter<$PrismaModel = 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumReasonCategoryNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumDepartmentNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.Department | Prisma.EnumDepartmentFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDepartmentNullableFilter<$PrismaModel> | $Enums.Department | null
+}
+
+export type NestedEnumStageStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.StageStatus | Prisma.EnumStageStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStageStatusFilter<$PrismaModel> | $Enums.StageStatus
+}
+
+export type NestedEnumDepartmentNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Department | Prisma.EnumDepartmentFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Department[] | Prisma.ListEnumDepartmentFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDepartmentNullableWithAggregatesFilter<$PrismaModel> | $Enums.Department | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDepartmentNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDepartmentNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumStageStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StageStatus | Prisma.EnumStageStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StageStatus[] | Prisma.ListEnumStageStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStageStatusWithAggregatesFilter<$PrismaModel> | $Enums.StageStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStageStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStageStatusFilter<$PrismaModel>
 }
 
 

@@ -81,3 +81,24 @@ export const ReasonCategory = {
 } as const
 
 export type ReasonCategory = (typeof ReasonCategory)[keyof typeof ReasonCategory]
+
+
+export const StageStatus = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  DELAYED: 'DELAYED'
+} as const
+
+export type StageStatus = (typeof StageStatus)[keyof typeof StageStatus]
+
+
+export const Department = {
+  MERCHANDISING: 'MERCHANDISING',
+  SCM: 'SCM',
+  PRODUCTION: 'PRODUCTION',
+  QUALITY: 'QUALITY',
+  ACCOUNTS: 'ACCOUNTS'
+} as const
+
+export type Department = (typeof Department)[keyof typeof Department]

@@ -42,3 +42,13 @@ export type OrderToken = Prisma.OrderTokenModel
  * 
  */
 export type PreProductionSample = Prisma.PreProductionSampleModel
+/**
+ * Model TimeActionPlan
+ * 
+ */
+export type TimeActionPlan = Prisma.TimeActionPlanModel
+/**
+ * Model TimeActionStage
+ * 
+ */
+export type TimeActionStage = Prisma.TimeActionStageModel

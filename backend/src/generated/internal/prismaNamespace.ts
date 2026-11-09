@@ -388,7 +388,9 @@ export const ModelName = {
   RefreshToken: 'RefreshToken',
   AuditLog: 'AuditLog',
   OrderToken: 'OrderToken',
-  PreProductionSample: 'PreProductionSample'
+  PreProductionSample: 'PreProductionSample',
+  TimeActionPlan: 'TimeActionPlan',
+  TimeActionStage: 'TimeActionStage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -404,7 +406,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "refreshToken" | "auditLog" | "orderToken" | "preProductionSample"
+    modelProps: "user" | "refreshToken" | "auditLog" | "orderToken" | "preProductionSample" | "timeActionPlan" | "timeActionStage"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -778,6 +780,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TimeActionPlan: {
+      payload: Prisma.$TimeActionPlanPayload<ExtArgs>
+      fields: Prisma.TimeActionPlanFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TimeActionPlanFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TimeActionPlanFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>
+        }
+        findFirst: {
+          args: Prisma.TimeActionPlanFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TimeActionPlanFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>
+        }
+        findMany: {
+          args: Prisma.TimeActionPlanFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>[]
+        }
+        create: {
+          args: Prisma.TimeActionPlanCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>
+        }
+        createMany: {
+          args: Prisma.TimeActionPlanCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TimeActionPlanCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>[]
+        }
+        delete: {
+          args: Prisma.TimeActionPlanDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>
+        }
+        update: {
+          args: Prisma.TimeActionPlanUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>
+        }
+        deleteMany: {
+          args: Prisma.TimeActionPlanDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TimeActionPlanUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TimeActionPlanUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>[]
+        }
+        upsert: {
+          args: Prisma.TimeActionPlanUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionPlanPayload>
+        }
+        aggregate: {
+          args: Prisma.TimeActionPlanAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTimeActionPlan>
+        }
+        groupBy: {
+          args: Prisma.TimeActionPlanGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TimeActionPlanGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TimeActionPlanCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TimeActionPlanCountAggregateOutputType> | number
+        }
+      }
+    }
+    TimeActionStage: {
+      payload: Prisma.$TimeActionStagePayload<ExtArgs>
+      fields: Prisma.TimeActionStageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TimeActionStageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TimeActionStageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>
+        }
+        findFirst: {
+          args: Prisma.TimeActionStageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TimeActionStageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>
+        }
+        findMany: {
+          args: Prisma.TimeActionStageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>[]
+        }
+        create: {
+          args: Prisma.TimeActionStageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>
+        }
+        createMany: {
+          args: Prisma.TimeActionStageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TimeActionStageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>[]
+        }
+        delete: {
+          args: Prisma.TimeActionStageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>
+        }
+        update: {
+          args: Prisma.TimeActionStageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>
+        }
+        deleteMany: {
+          args: Prisma.TimeActionStageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TimeActionStageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TimeActionStageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>[]
+        }
+        upsert: {
+          args: Prisma.TimeActionStageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TimeActionStagePayload>
+        }
+        aggregate: {
+          args: Prisma.TimeActionStageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTimeActionStage>
+        }
+        groupBy: {
+          args: Prisma.TimeActionStageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TimeActionStageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TimeActionStageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TimeActionStageCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -893,6 +1043,39 @@ export const PreProductionSampleScalarFieldEnum = {
 } as const
 
 export type PreProductionSampleScalarFieldEnum = (typeof PreProductionSampleScalarFieldEnum)[keyof typeof PreProductionSampleScalarFieldEnum]
+
+
+export const TimeActionPlanScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  owiId: 'owiId',
+  owi: 'owi',
+  orderDate: 'orderDate',
+  shipmentDeadline: 'shipmentDeadline',
+  totalLeadTimeDays: 'totalLeadTimeDays',
+  taVersion: 'taVersion',
+  isLocked: 'isLocked',
+  criticalPathFlag: 'criticalPathFlag',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TimeActionPlanScalarFieldEnum = (typeof TimeActionPlanScalarFieldEnum)[keyof typeof TimeActionPlanScalarFieldEnum]
+
+
+export const TimeActionStageScalarFieldEnum = {
+  id: 'id',
+  timeActionPlanId: 'timeActionPlanId',
+  stageName: 'stageName',
+  plannedStartDate: 'plannedStartDate',
+  plannedEndDate: 'plannedEndDate',
+  actualStartDate: 'actualStartDate',
+  actualEndDate: 'actualEndDate',
+  responsibleDepartment: 'responsibleDepartment',
+  status: 'status'
+} as const
+
+export type TimeActionStageScalarFieldEnum = (typeof TimeActionStageScalarFieldEnum)[keyof typeof TimeActionStageScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1073,6 +1256,34 @@ export type ListEnumReasonCategoryFieldRefInput<$PrismaModel> = FieldRefInputTyp
 
 
 /**
+ * Reference to a field of type 'Department'
+ */
+export type EnumDepartmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Department'>
+    
+
+
+/**
+ * Reference to a field of type 'Department[]'
+ */
+export type ListEnumDepartmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Department[]'>
+    
+
+
+/**
+ * Reference to a field of type 'StageStatus'
+ */
+export type EnumStageStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StageStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'StageStatus[]'
+ */
+export type ListEnumStageStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StageStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -1200,6 +1411,8 @@ export type GlobalOmitConfig = {
   auditLog?: Prisma.AuditLogOmit
   orderToken?: Prisma.OrderTokenOmit
   preProductionSample?: Prisma.PreProductionSampleOmit
+  timeActionPlan?: Prisma.TimeActionPlanOmit
+  timeActionStage?: Prisma.TimeActionStageOmit
 }
 
 /* Types for Logging */

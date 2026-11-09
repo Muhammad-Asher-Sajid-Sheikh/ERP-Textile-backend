@@ -55,7 +55,9 @@ export const ModelName = {
   RefreshToken: 'RefreshToken',
   AuditLog: 'AuditLog',
   OrderToken: 'OrderToken',
-  PreProductionSample: 'PreProductionSample'
+  PreProductionSample: 'PreProductionSample',
+  TimeActionPlan: 'TimeActionPlan',
+  TimeActionStage: 'TimeActionStage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -150,6 +152,39 @@ export const PreProductionSampleScalarFieldEnum = {
 } as const
 
 export type PreProductionSampleScalarFieldEnum = (typeof PreProductionSampleScalarFieldEnum)[keyof typeof PreProductionSampleScalarFieldEnum]
+
+
+export const TimeActionPlanScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  owiId: 'owiId',
+  owi: 'owi',
+  orderDate: 'orderDate',
+  shipmentDeadline: 'shipmentDeadline',
+  totalLeadTimeDays: 'totalLeadTimeDays',
+  taVersion: 'taVersion',
+  isLocked: 'isLocked',
+  criticalPathFlag: 'criticalPathFlag',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TimeActionPlanScalarFieldEnum = (typeof TimeActionPlanScalarFieldEnum)[keyof typeof TimeActionPlanScalarFieldEnum]
+
+
+export const TimeActionStageScalarFieldEnum = {
+  id: 'id',
+  timeActionPlanId: 'timeActionPlanId',
+  stageName: 'stageName',
+  plannedStartDate: 'plannedStartDate',
+  plannedEndDate: 'plannedEndDate',
+  actualStartDate: 'actualStartDate',
+  actualEndDate: 'actualEndDate',
+  responsibleDepartment: 'responsibleDepartment',
+  status: 'status'
+} as const
+
+export type TimeActionStageScalarFieldEnum = (typeof TimeActionStageScalarFieldEnum)[keyof typeof TimeActionStageScalarFieldEnum]
 
 
 export const SortOrder = {
