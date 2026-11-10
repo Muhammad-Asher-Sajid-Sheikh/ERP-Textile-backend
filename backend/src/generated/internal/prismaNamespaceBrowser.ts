@@ -57,7 +57,9 @@ export const ModelName = {
   OrderToken: 'OrderToken',
   PreProductionSample: 'PreProductionSample',
   TimeActionPlan: 'TimeActionPlan',
-  TimeActionStage: 'TimeActionStage'
+  TimeActionStage: 'TimeActionStage',
+  Broker: 'Broker',
+  BrokerThirdPartyRecord: 'BrokerThirdPartyRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -185,6 +187,35 @@ export const TimeActionStageScalarFieldEnum = {
 } as const
 
 export type TimeActionStageScalarFieldEnum = (typeof TimeActionStageScalarFieldEnum)[keyof typeof TimeActionStageScalarFieldEnum]
+
+
+export const BrokerScalarFieldEnum = {
+  id: 'id',
+  brokerName: 'brokerName',
+  contactPerson: 'contactPerson',
+  email: 'email',
+  phone: 'phone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BrokerScalarFieldEnum = (typeof BrokerScalarFieldEnum)[keyof typeof BrokerScalarFieldEnum]
+
+
+export const BrokerThirdPartyRecordScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  brokerId: 'brokerId',
+  stage: 'stage',
+  priceCost: 'priceCost',
+  dateToSent: 'dateToSent',
+  dateToReceive: 'dateToReceive',
+  isApproved: 'isApproved',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BrokerThirdPartyRecordScalarFieldEnum = (typeof BrokerThirdPartyRecordScalarFieldEnum)[keyof typeof BrokerThirdPartyRecordScalarFieldEnum]
 
 
 export const SortOrder = {

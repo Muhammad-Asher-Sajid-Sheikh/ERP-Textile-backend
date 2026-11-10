@@ -52,3 +52,13 @@ export type TimeActionPlan = Prisma.TimeActionPlanModel
  * 
  */
 export type TimeActionStage = Prisma.TimeActionStageModel
+/**
+ * Model Broker
+ * 
+ */
+export type Broker = Prisma.BrokerModel
+/**
+ * Model BrokerThirdPartyRecord
+ * 
+ */
+export type BrokerThirdPartyRecord = Prisma.BrokerThirdPartyRecordModel

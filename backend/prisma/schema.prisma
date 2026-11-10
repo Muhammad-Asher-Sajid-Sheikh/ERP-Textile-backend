@@ -220,3 +220,44 @@ model TimeActionStage {
   @@index([responsibleDepartment])
   @@map("time_action_stages")
 }
+
+
+// Broker
+model Broker {
+  id               String                   @id @default(uuid())
+  brokerName       String                   // Name of the broker, agent, or third-party
+  contactPerson    String?
+  email            String?
+  phone            String?
+  
+  // Relation to broker tracking records
+  trackingRecords  BrokerThirdPartyRecord[]
+
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@map("brokers")
+}
+
+model BrokerThirdPartyRecord {
+  id            String   @id @default(uuid())
+  icnNo         String
+  
+  brokerId      String
+  broker        Broker   @relation(fields: [brokerId], references: [id])
+  
+  stage         String   // e.g., Commission Agreement, Sample Dispatch, Payment Clearance
+  priceCost     Float    // Commission amount or agreed financial cost
+  
+  dateToSent    DateTime?
+  dateToReceive DateTime?
+  
+  isApproved    Boolean  @default(false) // Management sign-off flag
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([icnNo])
+  @@index([brokerId])
+  @@map("broker_third_party_records")
+}

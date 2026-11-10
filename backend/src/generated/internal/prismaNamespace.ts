@@ -390,7 +390,9 @@ export const ModelName = {
   OrderToken: 'OrderToken',
   PreProductionSample: 'PreProductionSample',
   TimeActionPlan: 'TimeActionPlan',
-  TimeActionStage: 'TimeActionStage'
+  TimeActionStage: 'TimeActionStage',
+  Broker: 'Broker',
+  BrokerThirdPartyRecord: 'BrokerThirdPartyRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -406,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "refreshToken" | "auditLog" | "orderToken" | "preProductionSample" | "timeActionPlan" | "timeActionStage"
+    modelProps: "user" | "refreshToken" | "auditLog" | "orderToken" | "preProductionSample" | "timeActionPlan" | "timeActionStage" | "broker" | "brokerThirdPartyRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -928,6 +930,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Broker: {
+      payload: Prisma.$BrokerPayload<ExtArgs>
+      fields: Prisma.BrokerFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BrokerFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BrokerFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>
+        }
+        findFirst: {
+          args: Prisma.BrokerFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BrokerFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>
+        }
+        findMany: {
+          args: Prisma.BrokerFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>[]
+        }
+        create: {
+          args: Prisma.BrokerCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>
+        }
+        createMany: {
+          args: Prisma.BrokerCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BrokerCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>[]
+        }
+        delete: {
+          args: Prisma.BrokerDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>
+        }
+        update: {
+          args: Prisma.BrokerUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>
+        }
+        deleteMany: {
+          args: Prisma.BrokerDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BrokerUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BrokerUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>[]
+        }
+        upsert: {
+          args: Prisma.BrokerUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerPayload>
+        }
+        aggregate: {
+          args: Prisma.BrokerAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBroker>
+        }
+        groupBy: {
+          args: Prisma.BrokerGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BrokerGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BrokerCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BrokerCountAggregateOutputType> | number
+        }
+      }
+    }
+    BrokerThirdPartyRecord: {
+      payload: Prisma.$BrokerThirdPartyRecordPayload<ExtArgs>
+      fields: Prisma.BrokerThirdPartyRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BrokerThirdPartyRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BrokerThirdPartyRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.BrokerThirdPartyRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BrokerThirdPartyRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>
+        }
+        findMany: {
+          args: Prisma.BrokerThirdPartyRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>[]
+        }
+        create: {
+          args: Prisma.BrokerThirdPartyRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>
+        }
+        createMany: {
+          args: Prisma.BrokerThirdPartyRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BrokerThirdPartyRecordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>[]
+        }
+        delete: {
+          args: Prisma.BrokerThirdPartyRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>
+        }
+        update: {
+          args: Prisma.BrokerThirdPartyRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.BrokerThirdPartyRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BrokerThirdPartyRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BrokerThirdPartyRecordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>[]
+        }
+        upsert: {
+          args: Prisma.BrokerThirdPartyRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BrokerThirdPartyRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.BrokerThirdPartyRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBrokerThirdPartyRecord>
+        }
+        groupBy: {
+          args: Prisma.BrokerThirdPartyRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BrokerThirdPartyRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BrokerThirdPartyRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BrokerThirdPartyRecordCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1076,6 +1226,35 @@ export const TimeActionStageScalarFieldEnum = {
 } as const
 
 export type TimeActionStageScalarFieldEnum = (typeof TimeActionStageScalarFieldEnum)[keyof typeof TimeActionStageScalarFieldEnum]
+
+
+export const BrokerScalarFieldEnum = {
+  id: 'id',
+  brokerName: 'brokerName',
+  contactPerson: 'contactPerson',
+  email: 'email',
+  phone: 'phone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BrokerScalarFieldEnum = (typeof BrokerScalarFieldEnum)[keyof typeof BrokerScalarFieldEnum]
+
+
+export const BrokerThirdPartyRecordScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  brokerId: 'brokerId',
+  stage: 'stage',
+  priceCost: 'priceCost',
+  dateToSent: 'dateToSent',
+  dateToReceive: 'dateToReceive',
+  isApproved: 'isApproved',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BrokerThirdPartyRecordScalarFieldEnum = (typeof BrokerThirdPartyRecordScalarFieldEnum)[keyof typeof BrokerThirdPartyRecordScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1413,6 +1592,8 @@ export type GlobalOmitConfig = {
   preProductionSample?: Prisma.PreProductionSampleOmit
   timeActionPlan?: Prisma.TimeActionPlanOmit
   timeActionStage?: Prisma.TimeActionStageOmit
+  broker?: Prisma.BrokerOmit
+  brokerThirdPartyRecord?: Prisma.BrokerThirdPartyRecordOmit
 }
 
 /* Types for Logging */
