@@ -529,3 +529,355 @@ export const updateTimeActionStages = async (req, res) => {
     });
   }
 };
+
+
+/**
+ * Create a new Broker / Third-Party profile.
+ */
+export const createBroker = async (req, res) => {
+  try {
+    const { brokerName, contactPerson, email, phone } = req.body;
+
+    if (!brokerName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Broker name is mandatory.'
+      });
+    }
+
+    const newBroker = await prisma.broker.create({
+      data: {
+        brokerName,
+        contactPerson,
+        email,
+        phone
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Broker created successfully.',
+      data: newBroker
+    });
+  } catch (error) {
+    console.error('Error creating broker:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while creating broker.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Create a Broker / Third-Party tracking record linked to an ICN and Broker.
+ * Defaults isApproved to false (pending management sign-off).
+ */
+export const createBrokerRecord = async (req, res) => {
+  try {
+    const { 
+      icnNo, 
+      brokerId, 
+      stage, 
+      priceCost, 
+      dateToSent, 
+      dateToReceive 
+    } = req.body;
+
+    // Validate mandatory fields
+    if (!icnNo || !brokerId || !stage || priceCost === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing mandatory fields: icnNo, brokerId, stage, and priceCost are required.'
+      });
+    }
+
+    // Verify broker exists
+    const brokerExists = await prisma.broker.findUnique({
+      where: { id: brokerId }
+    });
+
+    if (!brokerExists) {
+      return res.status(404).json({
+        success: false,
+        message: `Broker with ID ${brokerId} not found.`
+      });
+    }
+
+    const newRecord = await prisma.brokerThirdPartyRecord.create({
+      data: {
+        icnNo,
+        brokerId,
+        stage,
+        priceCost: parseFloat(priceCost),
+        dateToSent: dateToSent ? new Date(dateToSent) : null,
+        dateToReceive: dateToReceive ? new Date(dateToReceive) : null,
+        isApproved: false // Requires management sign-off
+      },
+      include: {
+        broker: true
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Broker tracking record created successfully.',
+      data: newRecord
+    });
+  } catch (error) {
+    console.error('Error creating broker tracking record:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while creating broker record.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all registered brokers and third-party partners.
+ */
+export const getAllBrokers = async (req, res) => {
+  try {
+    const brokers = await prisma.broker.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: brokers.length,
+      data: brokers
+    });
+  } catch (error) {
+    console.error('Error fetching brokers:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while fetching brokers.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all broker tracking records associated with a specific ICN number.
+ * Includes the related broker profile details.
+ */
+export const getBrokerRecordsByIcn = async (req, res) => {
+  try {
+    const { icnNo } = req.params;
+
+    if (!icnNo) {
+      return res.status(400).json({
+        success: false,
+        message: 'ICN number parameter is required.'
+      });
+    }
+
+    const records = await prisma.brokerThirdPartyRecord.findMany({
+      where: { icnNo },
+      include: {
+        broker: true // Pulls in broker profile details
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.status(200).json({
+      success: true,
+      icnNo,
+      count: records.length,
+      data: records
+    });
+  } catch (error) {
+    console.error('Error fetching broker records by ICN:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while fetching broker records for this ICN.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Update an existing Broker profile.
+ */
+export const updateBroker = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { brokerName, contactPerson, email, phone } = req.body;
+
+    const existingBroker = await prisma.broker.findUnique({
+      where: { id }
+    });
+
+    if (!existingBroker) {
+      return res.status(404).json({
+        success: false,
+        message: `Broker with ID ${id} not found.`
+      });
+    }
+
+    const updatedBroker = await prisma.broker.update({
+      where: { id },
+      data: {
+        ...(brokerName && { brokerName }),
+        ...(contactPerson !== undefined && { contactPerson }),
+        ...(email !== undefined && { email }),
+        ...(phone !== undefined && { phone })
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Broker profile updated successfully.',
+      data: updatedBroker
+    });
+  } catch (error) {
+    console.error('Error updating broker:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while updating broker.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Update an existing Broker/Third-Party tracking record.
+ * Allows updating financial/stage details and management approval (`isApproved`).
+ */
+export const updateBrokerRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      stage, 
+      priceCost, 
+      dateToSent, 
+      dateToReceive, 
+      isApproved 
+    } = req.body;
+
+    const existingRecord = await prisma.brokerThirdPartyRecord.findUnique({
+      where: { id }
+    });
+
+    if (!existingRecord) {
+      return res.status(404).json({
+        success: false,
+        message: `Broker tracking record with ID ${id} not found.`
+      });
+    }
+
+    const updatedRecord = await prisma.brokerThirdPartyRecord.update({
+      where: { id },
+      data: {
+        ...(stage && { stage }),
+        ...(priceCost !== undefined && { priceCost: parseFloat(priceCost) }),
+        ...(dateToSent !== undefined && { dateToSent: dateToSent ? new Date(dateToSent) : null }),
+        ...(dateToReceive !== undefined && { dateToReceive: dateToReceive ? new Date(dateToReceive) : null }),
+        ...(isApproved !== undefined && { isApproved })
+      },
+      include: {
+        broker: true
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Broker tracking record updated successfully.',
+      data: updatedRecord
+    });
+  } catch (error) {
+    console.error('Error updating broker tracking record:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while updating broker record.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Delete a Broker profile.
+ * Fails gracefully if the broker has existing tracking records attached.
+ */
+export const deleteBroker = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existingBroker = await prisma.broker.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { trackingRecords: true }
+        }
+      }
+    });
+
+    if (!existingBroker) {
+      return res.status(404).json({
+        success: false,
+        message: `Broker with ID ${id} not found.`
+      });
+    }
+
+    // Prevent deletion if linked tracking records exist to preserve data integrity
+    if (existingBroker._count.trackingRecords > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete broker. ${existingBroker._count.trackingRecords} active tracking record(s) are linked to this broker.`
+      });
+    }
+
+    await prisma.broker.delete({
+      where: { id }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Broker profile deleted successfully.'
+    });
+  } catch (error) {
+    console.error('Error deleting broker:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while deleting broker.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Delete a specific Broker/Third-Party tracking record.
+ */
+export const deleteBrokerRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existingRecord = await prisma.brokerThirdPartyRecord.findUnique({
+      where: { id }
+    });
+
+    if (!existingRecord) {
+      return res.status(404).json({
+        success: false,
+        message: `Broker tracking record with ID ${id} not found.`
+      });
+    }
+
+    await prisma.brokerThirdPartyRecord.delete({
+      where: { id }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Broker tracking record deleted successfully.'
+    });
+  } catch (error) {
+    console.error('Error deleting broker tracking record:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error while deleting broker record.',
+      error: error.message
+    });
+  }
+};

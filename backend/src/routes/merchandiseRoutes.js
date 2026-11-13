@@ -27,4 +27,22 @@ router.post('/ta-plan/:timeActionPlanId/stages', upsertTimeActionStages);
 router.put('/ta-plan/:id', updateTimeActionPlan);
 router.put('/ta-plan/:timeActionPlanId/stages', updateTimeActionStages); // Batch update stages identified by timeActionPlanId and stageName
 
+
+// POST route to register a new broker/agent
+router.post('/brokers', createBroker);
+// POST route to create a broker financial/tracking record
+router.post('/broker-records', createBrokerRecord);
+
+// --- GET Routes ---
+router.get('/brokers', getAllBrokers);
+router.get('/broker-records/icn/:icnNo', getBrokerRecordsByIcn);
+
+// --- Update Routes ---
+router.put('/brokers/:id', updateBroker);
+router.put('/broker-records/:id', updateBrokerRecord);
+
+// --- DELETE Routes ---
+router.delete('/brokers/:id', deleteBroker);
+router.delete('/broker-records/:id', deleteBrokerRecord);
+
 export default router;
