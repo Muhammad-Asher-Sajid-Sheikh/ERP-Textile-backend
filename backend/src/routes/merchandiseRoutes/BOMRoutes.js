@@ -6,6 +6,7 @@ const {
   getBOMById,
   updateBOM,
   deleteBOM,
+  reviseBOM,
 } = require('../../controller/Merchandise/BOMController');
 
 // Import your authentication middleware so req.user is populated for AuditLog
@@ -17,5 +18,6 @@ router.get('/', getAllBOMs);
 router.get('/:id', getBOMById);
 router.put('/:id', updateBOM);
 router.delete('/:id', deleteBOM);
+router.post('/:id/revise', reviseBOM);
 
 module.exports = router;

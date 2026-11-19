@@ -453,3 +453,144 @@ module.exports = {
   updateBOM,
   deleteBOM,
 };
+
+/**
+ * 6. REVISE OrderBOM (Clones APPROVED BOM -> new DRAFT version, marks old SUPERSEDED + AuditLog)
+ * POST /api/boms/:id/revise
+ */
+const reviseBOM = async (req, res) => {
+  try {
+    const audit = getAuditContext(req);
+    const { id } = req.params;
+    const { revisionReason, items: updatedItemsPayload } = req.body;
+
+    if (!revisionReason || !revisionReason.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'revisionReason is mandatory when creating a BOM revision (BBTI WF-13).',
+      });
+    }
+
+    const revisedBom = await prisma.$transaction(async (tx) => {
+      const existing = await tx.orderBom.findUnique({
+        where: { id },
+        include: {
+          items: { where: { isActive: true }, orderBy: { createdAt: 'asc' } },
+        },
+      });
+
+      if (!existing) {
+        throw new Error('NOT_FOUND');
+      }
+
+      if (existing.status !== 'APPROVED') {
+        throw new Error(
+          `INVALID_REVISION_STATE: Only APPROVED BOMs can be revised. Current status is ${existing.status}.`
+        );
+      }
+
+      // Find highest version number for this (icnNo, skuId) to prevent version collisions
+      const latestBom = await tx.orderBom.findFirst({
+        where: { icnNo: existing.icnNo, skuId: existing.skuId },
+        orderBy: { version: 'desc' },
+      });
+      const nextVersion = (latestBom ? latestBom.version : existing.version) + 1;
+
+      // 1. Mark previous version SUPERSEDED (never overwrite historical baseline)
+      await tx.orderBom.update({
+        where: { id: existing.id },
+        data: { status: 'SUPERSEDED' },
+      });
+
+      // 2. Prepare cloned items (use updatedItemsPayload if supplied, otherwise clone existing active items)
+      const sourceItems =
+        Array.isArray(updatedItemsPayload) && updatedItemsPayload.length > 0
+          ? updatedItemsPayload
+          : existing.items;
+
+      const clonedItems = sourceItems.map((item) => {
+        const metrics = calculateBomItemMetrics({
+          chargingCriteria: item.chargingCriteria,
+          baseQuantity: item.baseQuantity,
+          consumptionRate: item.consumptionRate,
+          allowancePercent: item.allowancePercent,
+          conversionFactor: item.conversionFactor,
+          ecsFrozenUnitRate: item.ecsFrozenUnitRate,
+        });
+
+        return {
+          category: item.category,
+          componentRole: item.componentRole || null,
+          materialCode: item.materialCode || null,
+          materialName: item.materialName,
+          specification: item.specification || null,
+          stageCode: item.stageCode || null,
+          applicableShade: item.applicableShade || null,
+          applicableSize: item.applicableSize || null,
+          chargingCriteria: item.chargingCriteria,
+          uom: item.uom,
+          purchaseUom: item.purchaseUom || null,
+          actualFirstBatchRate: item.actualFirstBatchRate
+            ? new Decimal(item.actualFirstBatchRate)
+            : null,
+          actualConsumedQty: new Decimal(item.actualConsumedQty || 0),
+          procuredQty: new Decimal(item.procuredQty || 0),
+          usableStockQty: new Decimal(item.usableStockQty || 0),
+          ecsLineItemId: item.ecsLineItemId || null,
+          extraAttributes: item.extraAttributes || undefined,
+          remarks: item.remarks || null,
+          ...metrics,
+        };
+      });
+
+      // 3. Create new DRAFT revision version
+      const newBom = await tx.orderBom.create({
+        data: {
+          icnNo: existing.icnNo,
+          atxScIon: existing.atxScIon,
+          skuId: existing.skuId,
+          version: nextVersion,
+          status: 'DRAFT',
+          revisionReason: revisionReason.trim(),
+          createdById: audit.userId,
+          items: {
+            create: clonedItems,
+          },
+        },
+        include: {
+          items: { where: { isActive: true }, orderBy: { createdAt: 'asc' } },
+        },
+      });
+
+      // 4. Record immutable audit entry
+      await tx.auditLog.create({
+        data: {
+          userId: audit.userId,
+          actionType: 'BOM_UPDATED',
+          actionDetails: `Revised OrderBOM for ICN: ${existing.icnNo}, SKU: ${existing.skuId}. Superseded v${existing.version} (ID: ${existing.id}) -> Created v${newBom.version} (ID: ${newBom.id}). Reason: ${revisionReason.trim()}`,
+          performedBy: audit.performedBy,
+          ipAddress: audit.ipAddress,
+        },
+      });
+
+      return newBom;
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `BOM v${revisedBom.version} created in DRAFT status; prior version marked SUPERSEDED.`,
+      data: revisedBom,
+    });
+  } catch (error) {
+    if (error.message === 'UNAUTHORIZED') {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
+    if (error.message === 'NOT_FOUND') {
+      return res.status(404).json({ success: false, message: 'OrderBOM not found.' });
+    }
+    if (error.message.startsWith('INVALID_REVISION_STATE')) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
