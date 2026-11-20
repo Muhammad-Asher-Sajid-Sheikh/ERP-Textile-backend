@@ -1,488 +1,125 @@
-# TextileERP Backend - Authentication System
+# BBTI ERP backend - foundation and WF-01
 
-## 🎯 Overview
+This Express 5 / PostgreSQL / Prisma 7 service implements the existing account lifecycle and WF-01 Customer Inquiry Receipt and Registration. Requirements were checked against BBTI P1-D0.11 (12 November 2026), pages 1-3. That specification is a management release candidate; this implementation grants no quotation, financial, order-activation or production authority.
 
-A production-ready, secure authentication and authorization system for TextileERP with the following features:
+## Runtime and commands
 
-- ✅ **User Registration & Login** with email/password
-- ✅ **Account Approval Workflow** - Management approval required before access
-- ✅ **Role-Based Access Control (RBAC)** with 4 roles
-- ✅ **JWT Token Management** - Access (15m) + Refresh (7d)
-- ✅ **Secure Password** - Strong requirements + bcrypt hashing
-- ✅ **Account Security** - Lockout after failed attempts
-- ✅ **Email Notifications** - Beautiful HTML emails for all events
-- ✅ **Audit Logging** - Complete activity tracking
-- ✅ **Token Rotation** - Automatic refresh token rotation
-- ✅ **Rate Limiting** - Protection against brute force attacks
+Use Node 22.12+ (verified with Node 24) and run all commands from `backend/`:
 
----
-
-## 📦 What's Been Created/Enhanced
-
-### Core Files
-
-| File | Description |
-|------|-------------|
-| [prisma/schema.prisma](#schema) | Enhanced database schema with audit logs |
-| [src/controller/tokencontroller.js](#token-controller) | Comprehensive token management |
-| [src/middleware/checktoken.js](#middleware) | Fixed token validation with correct JWT secrets |
-| [src/middleware/rbac.js](#rbac) | Enhanced role-based access control |
-| [src/routes/auth.js](#auth-routes) | Complete authentication endpoints |
-| [src/services/mailer.js](#mailer) | Email service with beautiful templates |
-| [src/app.js](#app) | Updated app configuration with security |
-| [.env.example](#env) | Environment variables template |
-
-### Documentation
-
-| File | Purpose |
-|------|---------|
-| [AUTHENTICATION_GUIDE.md](#guides) | Complete authentication system guide |
-| [RBAC_GUIDE.md](#guides) | Role-based access control documentation |
-| [FRONTEND_INTEGRATION.md](#guides) | Frontend integration guide with React examples |
-| [README.md](#readme) | This file |
-
----
-
-## 🚀 Quick Start
-
-### 1. Installation
-
-```bash
-npm install
-```
-
-### 2. Environment Setup
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with:
-- PostgreSQL connection string
-- JWT secrets (generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
-- Resend API key
-
-### 3. Database Setup
-
-```bash
-npx prisma migrate dev --name init
-npx prisma generate
-```
-
-### 4. Start Server
-
-```bash
-npm start
-# or for development
+```sh
+npm ci
+npm run prisma:validate
+npm run generate
+npm run typecheck
+npm run build
+npm run migrate:deploy
 npm run dev
+# Or, after building:
+npm start
 ```
 
-Visit: http://localhost:3000/health
+Configure `.env` from [.env.example](./.env.example). Never commit it. `DATABASE_URL`, `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` are required at application import. Prisma CLI requires `DATABASE_URL`; no credential fallback exists. Use independent random JWT secrets. `ResendAPIKey`, `RESEND_FROM_EMAIL`, and `FRONTEND_LOGIN_URL` configure existing email notifications. Missing mail configuration does not prevent startup or roll back an account mutation; delivery failures are logged without confidential contents. Legacy successful account messages still say notification email sent, so that text is not delivery confirmation.
 
----
+`PORT` defaults to 3000. `FRONTEND_URL` controls credentialed CORS. `NODE_ENV=production` enables Secure refresh cookies; production requires HTTPS. `ENABLE_REQUEST_LOGGING=true` logs only correlation ID, method and status. `ENABLE_TOKEN_CLEANUP=false` disables hourly cleanup; `TOKEN_CLEANUP_INTERVAL_MS` otherwise controls its interval. The existing auth limiter remains five shared register/login/refresh requests per IP per 15 minutes; the old documented `RATE_LIMIT_*` variables were never read and remain unused. Express does not trust arbitrary forwarded IP headers; configure a known proxy topology separately before proxy deployment.
 
-## 📊 Database Schema
+Development runs TypeScript through `tsx watch`. Deployment compiles NodeNext ESM to `dist/` with `tsc`; generated Prisma sources compile alongside application code. Source `.js` imports resolve to TypeScript during compilation and to emitted JavaScript in production. Prisma's generator explicitly emits `.js` import paths. Generated files and `dist/` are ignored, so generate before type checking. Build with development dependencies available; deploy `dist/`, package manifests and production dependencies (`npm ci --omit=dev --ignore-scripts` after the build, or a separate runtime image). `npm start` uses Node only. Run migration deployment in a build/release environment with the Prisma CLI installed. Do not run Prisma 8 from the repository root.
 
-### Core Tables
+## Architecture
 
-```
-User (id, email, passwordHash, name, role, status, ...)
-├── refreshTokens (RefreshToken[])
-└── auditLogs (AuditLog[])
+- [src/app.ts](./src/app.ts): middleware and route assembly, without starting a listener.
+- [src/server.ts](./src/server.ts): database connection, listener, cleanup and graceful shutdown.
+- [src/routes/](./src/routes/): endpoint declarations and authorization middleware.
+- [src/controllers/](./src/controllers/): request parsing, HTTP status, cookies and response projection.
+- [src/services/](./src/services/): auth, account, token, customer, inquiry and evidence workflows.
+- [src/middleware/](./src/middleware/): live authentication, RBAC, validation, errors and 404 handling.
+- [src/lib/prisma.ts](./src/lib/prisma.ts): single shared PostgreSQL adapter/client.
+- [src/validators/](./src/validators/): strict business DTOs and compatible auth validation.
+- [src/utils/](./src/utils/): ApiResponse, ApiError and asyncHandler.
+- [prisma/](./prisma/): schema and append-only migration history.
 
-RefreshToken (id, token, userId, ipAddress, userAgent, expiresAt)
-
-AuditLog (id, userId, actionType, actionDetails, performedBy, ipAddress, timestamp)
-```
-
-### Roles
-
-```
-MANAGEMENT    - Full admin control over users
-PRODUCTION    - Production department access
-MERCHANDISE   - Inventory/merchandise access
-MARKETING     - Marketing department access
-```
-
-### Account Status
+The existing unmounted Merchandising product-list helper is retained with its shared client and corrected Prisma delegate. No Merchandising business workflow has been redesigned. OrderToken is not an official ICN or an order-activation mechanism.
 
-```
-PENDING     - Waiting for management approval
-APPROVED    - Can log in and access system
-REJECTED    - Cannot access system
-SUSPENDED   - Temporarily blocked from access
-```
-
----
-
-## 🔐 Security Features
+## Authentication compatibility
 
-### Password Security
-- ✅ Minimum 8 characters
-- ✅ Uppercase + Lowercase + Numbers + Special chars
-- ✅ Bcrypt hashing with 12 salt rounds
-- ✅ Password change tracking
+All eleven existing methods and URLs are preserved. Password hashing remains bcrypt with 12 rounds; password rules, pending registration, Management approval/rejection/suspension/role changes, five-failure account lockout and 15-minute lock duration remain. Access JWTs expire in 15 minutes; refresh JWTs and the `refreshtoken` cookie expire in seven days. Cookie attributes remain HttpOnly, SameSite=Lax, Path=/ and Secure in production. Notification templates and events are retained, with HTML escaping added for user content.
 
-### Account Protection
-- ✅ Account lockout after 5 failed attempts (15 min)
-- ✅ Last login IP tracking
-- ✅ Session tracking via refresh tokens
-- ✅ Failed login logging
+Auth success responses retain `success`, `message`, and existing top-level `user`, `users`, `count`, and `accesstoken` fields. The normalized `statusCode` and `data` fields are additive; the aliases deliberately duplicate the same safe projection. Existing error `status`/`requiredRoles`/`userRole` fields are retained where applicable. Validation errors now also have stable `code` and `errors` fields. Unexpected failures return a safe generic message.
 
-### Token Security
-- ✅ JWT signed tokens
-- ✅ Token rotation on refresh
-- ✅ HttpOnly cookies (XSS protection)
-- ✅ Automatic token cleanup (expired tokens removed)
+JWTs must verify before a live database lookup. Role and status are loaded once per protected request, so suspension, rejection or demotion takes effect on the next request, even with an old token. All protected endpoints require APPROVED. The schema has no separate INACTIVE account status; customer inactivity is independent. Auth user IDs remain text-compatible with the historical integer-to-text migration.
 
-### API Protection
-- ✅ Rate limiting (100 req/15 min)
-- ✅ CORS configuration
-- ✅ Helmet security headers
-- ✅ Input validation
+Refresh now checks the refresh cookie signature, stored session, expiry, user identity and live status before any successful return. A supplied access token that is still valid and matches current authority retains the existing no-rotation behavior. Otherwise, a valid cookie can refresh without an access header; rotation deletes the old session and stores a uniquely identified replacement transactionally. Logout revokes only the actor's matching refresh session and is idempotent for an already revoked cookie. As before, logout does not blacklist an already issued access JWT.
 
----
+Initial Management provisioning remains an operator responsibility. Registration never auto-approves a Management account. On a new database an authorized operator must provision/approve the first administrator using the existing operational process; this PR adds no bootstrap bypass or seed script.
 
-## 📋 API Endpoints
+## Permissions
 
-### Authentication (No Auth Required)
+See [RBAC_GUIDE.md](./RBAC_GUIDE.md). Marketing and Management maintain Customer Master. Marketing alone writes inquiries; all approved Marketing users share the current department scope. Management reads inquiries and their business audit entries. MERCHANDISE reads only assigned inquiries, including related customer details, history and evidence. PRODUCTION has no WF-01 access. There is no tenant/team hierarchy in the existing schema, so finer Marketing ownership scopes need an explicit future mapping.
 
-```
-POST   /api/auth/register          Register new user
-POST   /api/auth/login             Login with credentials
-POST   /api/auth/refresh           Refresh access token
-POST   /api/auth/logout            Logout user
-```
+These permissions do not confer Finance, Accounts, QA, quotation approval, PO acceptance, ICN issuance or production release authority. Those mappings remain unresolved and outside this PR.
 
-### User (Auth + APPROVED Required)
+## Endpoints
 
-```
-GET    /api/auth/profile           Get user profile
-POST   /api/auth/change-password   Change password
-```
+Authentication stays under `/api/auth`: POST `register`, `login`, `refresh`, `logout`, `change-password`; GET `profile`, `admin/pending-users`; PATCH `admin/users/:id/approve`, `reject`, `role`, `suspend`.
 
-### Management (MANAGEMENT Role Required)
-
-```
-GET    /api/auth/admin/pending-users        List pending users
-PATCH  /api/auth/admin/users/:id/approve    Approve user
-PATCH  /api/auth/admin/users/:id/reject     Reject user
-PATCH  /api/auth/admin/users/:id/role       Change user role
-PATCH  /api/auth/admin/users/:id/suspend    Suspend user
-```
-
-See [API Endpoints](./AUTHENTICATION_GUIDE.md#api-endpoints) for detailed documentation.
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST / GET | `/api/customers` | Create / search customers |
+| GET / PATCH | `/api/customers/:id` | Read / update or deactivate |
+| POST / GET | `/api/marketing/inquiries` | Register / search inquiries |
+| GET / PATCH | `/api/marketing/inquiries/:id` | Read / edit permitted fields |
+| POST / GET | `/api/marketing/inquiries/:id/evidence` | Append / page through original evidence |
+| GET | `/api/marketing/inquiries/:id/evidence/:evidenceId/attachment` | Authorized attachment download |
+| POST / GET | `/api/marketing/inquiries/:id/acknowledgements` | Record / list customer acknowledgements |
+| POST | `/api/marketing/inquiries/:id/link-duplicate` | Link to another inquiry of the same customer |
+| POST | `/api/marketing/inquiries/:id/status` | Hold, resume or close with a reason |
+| GET | `/api/marketing/inquiries/:id/history` | Status history; business audit included for Management |
 
----
-
-## 🎯 User Workflow
+JSON success: `{ "success": true, "statusCode": 201, "message": "Inquiry registered successfully", "data": {...}, "meta": {...} }`. Metadata is optional. Error: `{ "success": false, "statusCode": 409, "code": "INVALID_STATUS_TRANSITION", "message": "...", "errors": [], "requestId": "..." }`. Known invalid requests are 400, authentication 401, authorization 403, missing resources 404, conflicts 409, domain validation 422 and rate limits 429. Oversized bodies return 413. Unknown failures are 500 without ORM queries or stacks. Downloads return bytes instead of a JSON envelope.
 
-```
-User Registration
-    ↓
-Choose Role → Account Created (PENDING status)
-    ↓
-Management Reviews
-    ├→ Approved → User can log in
-    └→ Rejected → Cannot access
-    ↓
-Login with Credentials
-    ↓
-Get Access Token (15m) + Refresh Token (7d)
-    ↓
-Access Protected Resources
-    ↓
-Token Expires → Refresh Token
-    ↓
-New Access Token Generated
-    ↓
-Logout → Tokens Revoked
-```
-
----
-
-## 📧 Email Notifications
-
-Automated emails sent for:
-
-- 📧 **Welcome Email** - After registration
-- 📧 **Approval Email** - When account approved
-- 📧 **Rejection Email** - When application rejected
-- 📧 **Role Change Email** - When role is changed
-- 📧 **Suspension Email** - When account suspended
-
-All emails are professionally designed with your branding.
-
----
-
-## 🛠️ Configuration
-
-### Environment Variables
-
-```bash
-# Database
-DATABASE_URL=postgresql://...
-
-# JWT
-JWT_ACCESS_SECRET=your-secret-key
-JWT_REFRESH_SECRET=your-secret-key
-
-# Email
-ResendAPIKey=your-resend-key
-RESEND_FROM_EMAIL=noreply@company.com
-FRONTEND_LOGIN_URL=https://yourfrontend.com/login
-
-# App
-NODE_ENV=development
-PORT=3000
-FRONTEND_URL=http://localhost:3000
-
-# Security
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
----
-
-## 🧪 Testing
-
-### Using cURL
-
-```bash
-# Register
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@test.com",
-    "password": "Test123!",
-    "confirmPassword": "Test123!",
-    "name": "Test User",
-    "role": "PRODUCTION"
-  }'
-
-# Login
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "user@test.com", "password": "Test123!"}'
-
-# Get Profile
-curl -X GET http://localhost:3000/api/auth/profile \
-  -H "Authorization: Bearer {ACCESS_TOKEN}"
-```
-
-### Using Postman
-
-1. Import the API endpoints
-2. Set environment variable: `base_url=http://localhost:3000`
-3. Test each endpoint sequentially
-
----
-
-## 📚 Documentation
-
-### Comprehensive Guides
-
-1. **[AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md)** 
-   - Complete system overview
-   - Database schema details
-   - All API endpoints with examples
-   - Error handling & troubleshooting
-
-2. **[RBAC_GUIDE.md](./RBAC_GUIDE.md)**
-   - Role definitions and permissions
-   - RBAC implementation
-   - Adding new roles
-   - Best practices
-
-3. **[FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)**
-   - React integration examples
-   - Auth context setup
-   - Protected routes
-   - Error handling
-
----
-
-## 🔄 Token Flow
-
-```
-1. User Login
-   ├─ Credentials verified
-   ├─ Access Token generated (15m)
-   ├─ Refresh Token generated (7d)
-   ├─ Refresh Token stored in DB
-   └─ Refresh Token set in httpOnly cookie
-
-2. API Request
-   ├─ Send Access Token in Authorization header
-   └─ Server validates token
-
-3. Token Expiration
-   ├─ Catch 401 error
-   ├─ Send Refresh Token from cookie
-   ├─ Get new Access Token
-   ├─ Retry original request
-   └─ Continue session
-
-4. Logout
-   ├─ Revoke Refresh Token
-   ├─ Clear cookie
-   └─ Session ended
-```
-
----
-
-## 🐛 Troubleshooting
-
-### "Database Connection Error"
-- Check DATABASE_URL in .env
-- Ensure PostgreSQL is running
-- Verify credentials
-
-### "JWT Secret not configured"
-- Generate new secrets: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-- Add to .env file
-- Restart server
-
-### "Emails not sending"
-- Verify Resend API key
-- Check sender email is verified in Resend
-- Test with: `curl -X POST https://api.resend.com/emails -H "Authorization: Bearer YOUR_KEY"`
-
-### "User locked after failed attempts"
-- Account auto-unlocks after 15 minutes
-- Or: `UPDATE "User" SET lockedUntil = NULL WHERE id = 'user_id'`
-
-See [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md#troubleshooting) for more help.
-
----
-
-## 🔄 Deployment Checklist
-
-- [ ] Update .env with production values
-- [ ] Set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET to strong random strings
-- [ ] Configure FRONTEND_URL for production domain
-- [ ] Setup Resend email with verified domain
-- [ ] Set NODE_ENV=production
-- [ ] Use HTTPS only
-- [ ] Setup database backups
-- [ ] Configure CORS for production domains
-- [ ] Enable rate limiting
-- [ ] Setup monitoring and logging
-- [ ] Test all endpoints
-- [ ] Verify email sending
-- [ ] Setup SSL certificate
-- [ ] Run migration on production DB: `npx prisma migrate deploy`
-
----
-
-## 📊 Database Schema Visualization
-
-```
-┌─────────────────────────────────────────────┐
-│           User Table                        │
-├─────────────────────────────────────────────┤
-│ id (UUID)                                   │
-│ email (String, Unique)                      │
-│ passwordHash (String)                       │
-│ name (String)                               │
-│ role (Enum: MANAGEMENT, PRODUCTION, ...)    │
-│ status (Enum: PENDING, APPROVED, ...)       │
-│ loginAttempts (Int)                         │
-│ lastLoginAt (DateTime)                      │
-│ lockedUntil (DateTime)                      │
-│ createdAt (DateTime)                        │
-│ updatedAt (DateTime)                        │
-└────────────┬────────────────────────────────┘
-             │
-             ├──────────────────────────────────┐
-             │                                  │
-       ┌─────▼──────────────────────┐  ┌───────▼────────────────────┐
-       │   RefreshToken Table       │  │    AuditLog Table          │
-       ├────────────────────────────┤  ├────────────────────────────┤
-       │ id (UUID)                  │  │ id (UUID)                  │
-       │ token (String, Unique)     │  │ userId (UUID)              │
-       │ userId (UUID) - FK         │  │ actionType (Enum)          │
-       │ ipAddress (String)         │  │ actionDetails (String)     │
-       │ userAgent (String)         │  │ performedBy (String)       │
-       │ createdAt (DateTime)       │  │ ipAddress (String)         │
-       │ expiresAt (DateTime)       │  │ timestamp (DateTime)       │
-       └────────────────────────────┘  └────────────────────────────┘
-```
-
----
-
-## 🚀 Next Steps
-
-1. **Frontend Integration**
-   - Use [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)
-   - Create login/register pages
-   - Setup protected routes
-
-2. **Business Logic Routes**
-   - Create production routes in `src/routes/`
-   - Apply middleware: `checktoken, checkApproved, requireRole(...)`
-   - Implement business logic
-
-3. **Additional Roles**
-   - Update prisma schema
-   - Add new role to validation
-   - Create role-specific routes
-
-4. **Enhanced Security**
-   - Setup 2FA
-   - Add email verification
-   - Implement CAPTCHA for registration
-
----
-
-## 📞 Support
-
-For issues or questions:
-
-1. Check [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md#troubleshooting)
-2. Review error messages and stack traces
-3. Verify environment variables
-4. Check database connections
-5. Test with curl/Postman
-
----
-
-## 📝 Version History
-
-**Version 1.0.0** (June 18, 2026)
-- Initial release
-- Complete auth system
-- RBAC implementation
-- Email notifications
-- Audit logging
-- Comprehensive documentation
-
----
-
-## 📄 License
-
-This project is part of TextileERP. All rights reserved.
-
----
-
-## 🎉 Summary
-
-You now have a **production-ready authentication system** with:
-
-✅ Secure login/registration
-✅ Account approval workflow  
-✅ Role-based access control
-✅ JWT token management
-✅ Email notifications
-✅ Audit logging
-✅ Comprehensive documentation
-✅ React integration examples
-✅ Security best practices
-✅ Error handling & troubleshooting
-
-**Start building!** 🚀
-
----
-
-**Last Updated:** June 18, 2026
-**Version:** 1.0.0
+List queries use `page` (default 1) and `pageSize` (default 20, max 100). Customer filters: `search`, `country`, `active=true|false`; sorting by name then ID. Inquiry filters: `search` (IRN/category), `customerId`, `merchandiserId`, `status`, `priority`, `source`; sorting newest first then ID. Detail responses include the first 20 evidence/acknowledgement records and counts; use their paginated GET endpoints for the remainder. History has independent transition/audit totals. No User passwords, tokens or security fields appear in business responses.
+
+## Customer and registration rules
+
+Customer requires a controlled unique code, name, country and at least one named contact with email or phone. Codes normalize to uppercase letters/digits/single hyphens and are immutable; deactivation preserves identities and existing inquiries. Contact and relationship arrays supplied to PATCH replace that collection, with old/new values retained in transactional audit. Omitted collections remain unchanged. Commercial-party relationships point to reusable Customer identities using BUYER, LEGAL_BUYER, AGENT, ACCOUNT_OWNER, REMITTER, CONSIGNEE or ULTIMATE_CUSTOMER; an unknown relationship need not be supplied. No customer approval gate exists.
+
+Registration requires an active customer, source, original received timestamp with UTC offset, original message or attachment, approved MERCHANDISE assignee, response deadline and next action. Priority defaults to NORMAL (LOW/HIGH/URGENT are available). Product/category, season/program, destination, estimated quantity/unit and target date may remain unknown. Optional quantities are positive and stored as Decimal(20,4); JSON responses serialize them as strings. Dates use ISO formats; target date is date-only. Source and received time on the initial evidence must match the inquiry. Future receipt/acknowledgement timestamps and deadlines before receipt are rejected. An overdue deadline can be recorded when entering an older inquiry.
+
+Acknowledgement is recorded later, not required before registration. The endpoint records an acknowledgement already sent by a person; it does not send email or WhatsApp. This avoids inventing a communication integration.
+
+## IRN and state rules
+
+IRN is `CustomerCode-YYMMDD-nnn`. YYMMDD and the annual counter year use the UTC registration date, taken after obtaining the customer's transaction lock, independent of server timezone and the original received time. A PostgreSQL `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` allocates per customer/year, in the same transaction as inquiry/evidence/history/audit creation. Failure rolls back allocation. Customer updates and inquiry mutations take the same customer row lock. Unique constraints protect both the full IRN and `(customerId, irnYear, irnSerial)`.
+
+The exact three-digit format permits 001-999 per customer/year. A 1000th allocation returns `IRN_SEQUENCE_EXHAUSTED` and rolls back; wider numbering requires business authorization rather than silently changing the specified format. A new year gets a new counter starting at 001. Database triggers prohibit changing issued identity/receipt fields, deleting inquiries, changing customer codes, or rewinding counters. Closure never releases a serial. No API accepts an IRN or creator ID.
+
+RECEIVED is recorded retrospectively in history using the original receipt time, followed by REGISTERED on save. There is no incomplete draft endpoint issuing an IRN. REGISTERED can become ACKNOWLEDGED through acknowledgement recording. REGISTERED/ACKNOWLEDGED can become ON_HOLD or CLOSED; ON_HOLD can resume to REGISTERED or close. Resume retains past acknowledgements. REGISTERED/ACKNOWLEDGED/ON_HOLD can become DUPLICATE_LINKED through explicit linking. DUPLICATE_LINKED can only close; CLOSED is terminal. Holds, resumes, duplicate links and closures require a reason. Closed/linked records cannot be edited, but evidence may still be appended. All transitions are transactionally audited.
+
+Likely duplicate detection is advisory: matching original content hash, or matching source/channel reference for the same customer, yields up to 20 candidates in registration `meta.likelyDuplicates`. It does not silently merge or block a genuinely separate inquiry. Marketing must review and explicitly link genuine duplicates. Linking requires the same customer and prevents self-links, chains and cycles; both original IRNs and evidence remain permanent. Fuzzy semantic duplicate detection is not implemented.
+
+## Evidence storage and production dependency
+
+Original messages and optional attachment bytes are stored in PostgreSQL. SHA-256 hashes, actual byte size, content type, plain filename, uploader and creation time are recorded. Only PDF, PNG, JPEG, UTF-8 text and email files are accepted, up to 5 MiB per attachment within a 10 MiB JSON request. The base64 encoding must be canonical and file signatures/text encoding must match the declared type. No path or external URL is fetched. A filename/reference alone is not stored file evidence.
+
+Evidence, acknowledgements, status history and business audit rows are append-only at the database level. Corrections append evidence referencing `correctsEvidenceId`; the original stays unchanged. Original message whitespace is retained. Metadata queries omit bytes. Downloads require the same inquiry access as reads, use attachment disposition and `application/octet-stream`, and disable caching. There is no public upload directory.
+
+This is real database-backed storage suitable for development and small bounded evidence, not configured production object storage. Before production acceptance, approve retention/backups, capacity, malware scanning/quarantine, and private object storage for larger or additional file formats. Signature checking is not malware scanning. The object-storage and retention decisions are explicit deployment dependencies, not completed features.
+
+## Migration safety
+
+Old migration files are unchanged. The historical auth migration drops the old tutorial Post table and changes User IDs; it must not be blindly replayed against a populated pre-auth database. Back up and inspect migration status/drift first. This task's configured database was inspected as empty before applying the chain; established deployments should already have the old migrations recorded.
+
+The foundation migration only adds the previously unmigrated Products table, its relation, and orderId indexes. ProductFamily's existing required columns and foreign key are restored in the schema to match history. Existing User/RefreshToken/AuditLog definitions are preserved. `@updatedAt` is applied to Merchandising update timestamps without dropping their existing defaults.
+
+The WF-01 migration creates new enums/tables/indexes/restrictive foreign keys, check constraints and immutability triggers. It neither drops existing tables/columns nor rewrites auth records. Do not use `db push`, reset or edited old migrations to reconcile an existing installation. Custom SQL triggers/checks are authoritative additions beyond what Prisma's schema diff represents. Future retention/data correction migrations must explicitly account for them.
+
+## Verification and remaining work
+
+Use [POSTMAN_VERIFICATION.md](./POSTMAN_VERIFICATION.md) for manual authentication, customer, inquiry, authorization and IRN checks. No automated tests, seed scripts or custom test runners are introduced. Compilation, migration deployment and startup are separate from endpoint/UAT verification; the final delivery records which checks actually ran.
+
+WF-02 through WF-14, Finance/QA authority mapping, production storage approval and end-to-end business UAT remain outside this implementation. The supplied internal management PDF is reference material and is not automatically published with the PR.
+
+Verification on 20 November 2026: Prisma validation, generation (7.10.1), TypeScript checking and compilation passed. The full six-migration chain deployed to the inspected empty local PostgreSQL database; migration status is current and the database-to-schema diff is empty. Development and compiled production-mode servers started, and the registered router stack contains the existing eleven auth endpoints plus all customer/inquiry routes. Manual HTTP probes covered health, unauthenticated customer/inquiry rejection and unknown-route handling. Authenticated business operations, notification delivery, concurrency and annual reset remain for the manual Postman/UAT checklist. No business records or test users were seeded.
+
+Compiled production startup and HTTP 200 health were also verified after `npm ci --omit=dev --ignore-scripts`; development dependencies were then restored with `npm ci`.
+
+Compatible dependency updates removed the initial critical audit finding. `npm audit` still reports three high findings through Prisma's `effect` dependency chain. Its proposed forced remediation downgrades Prisma to 6, so it was not applied; review an upstream Prisma 7-compatible fix before production acceptance. Prisma CLI/client/adapter are aligned at 7.10.1 in the lockfile.

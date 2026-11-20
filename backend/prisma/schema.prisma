@@ -4,8 +4,10 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated"
+  provider            = "prisma-client"
+  output              = "../src/generated"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
 }
 
 datasource db {
@@ -51,10 +53,18 @@ model User {
   lastLoginIp       String?
   lockedUntil       DateTime?
   createdAt         DateTime      @default(now())
-  updatedAt         DateTime?      @updatedAt
+  updatedAt         DateTime?     @updatedAt
 
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
+  refreshTokens     RefreshToken[]
+  auditLogs         AuditLog[]
+  customersCreated  Customer[]               @relation("CustomerCreator")
+  customersUpdated  Customer[]               @relation("CustomerModifier")
+  inquiriesCreated  Inquiry[]                @relation("InquiryCreator")
+  inquiriesAssigned Inquiry[]                @relation("InquiryMerchandiser")
+  evidenceUploaded  InquiryEvidence[]
+  inquiryChanges    InquiryStatusHistory[]
+  acknowledgements  InquiryAcknowledgement[]
+  businessAuditLogs BusinessAuditLog[]
 }
 
 model RefreshToken {
@@ -72,46 +82,266 @@ model RefreshToken {
 }
 
 model AuditLog {
-  id            String            @id @default(uuid())
+  id            String          @id @default(uuid())
   userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   actionType    AuditActionType
   actionDetails String?
   performedBy   String?
   ipAddress     String?
-  timestamp     DateTime          @default(now())
+  timestamp     DateTime        @default(now())
 
   @@index([userId])
   @@index([timestamp])
   @@index([actionType])
 }
 
-
-model OrderToken{
-  id            String            @id @default(uuid())
+model OrderToken {
+  id              String          @id @default(uuid())
   productFamilies ProductFamily[] // Back-relation field
+  products        Products[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 // MERCHANDISE Department
 
-model ProductFamily{
-  id            String            @id @default(uuid())
+model ProductFamily {
+  id             String     @id @default(uuid())
+  orderId        String
+  order          OrderToken @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productType    String
+  productList    String
+  normalMaterial String
+  productStage   String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now()) @updatedAt
+
+  @@index([orderId])
 }
 
-model Products{
-  id            String            @id @default(uuid())
-  orderId       String// Scalar field storing the foreign key
-  order         OrderToken  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+model Products {
+  id      String     @id @default(uuid())
+  orderId String // Scalar field storing the foreign key
+  order   OrderToken @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  productType   String
-  productList   String?
+  productType String
+  productList String?
 
-  normalMaterial  String?
-  productStage    String?
+  normalMaterial String?
+  productStage   String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([orderId])
+}
+
+enum InquirySource {
+  EMAIL
+  WHATSAPP
+  WEBSITE
+  BUYING_AGENT
+  MEETING
+  TELEPHONE
+  OTHER
+}
+
+enum InquiryStatus {
+  RECEIVED
+  REGISTERED
+  ACKNOWLEDGED
+  DUPLICATE_LINKED
+  ON_HOLD
+  CLOSED
+}
+
+enum InquiryPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum CommercialPartyRole {
+  LEGAL_BUYER
+  BUYER
+  AGENT
+  ACCOUNT_OWNER
+  REMITTER
+  CONSIGNEE
+  ULTIMATE_CUSTOMER
+}
+
+model Customer {
+  id            String                 @id @default(uuid())
+  code          String                 @unique
+  name          String
+  country       String
+  customerType  String?
+  active        Boolean                @default(true)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  createdById   String
+  updatedById   String
+  createdBy     User                   @relation("CustomerCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy     User                   @relation("CustomerModifier", fields: [updatedById], references: [id], onDelete: Restrict)
+  contacts      CustomerContact[]
+  relationships CustomerRelationship[] @relation("CustomerParties")
+  relatedTo     CustomerRelationship[] @relation("RelatedParty")
+  inquiries     Inquiry[]
+  sequences     IrnSequence[]
+
+  @@index([active, name])
+}
+
+model CustomerContact {
+  id          String   @id @default(uuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  name        String
+  email       String?
+  phone       String?
+  designation String?
+
+  @@index([customerId])
+}
+
+model CustomerRelationship {
+  id         String              @id @default(uuid())
+  customerId String
+  partyId    String
+  role       CommercialPartyRole
+  customer   Customer            @relation("CustomerParties", fields: [customerId], references: [id], onDelete: Restrict)
+  party      Customer            @relation("RelatedParty", fields: [partyId], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, partyId, role])
+  @@index([partyId])
+}
+
+model IrnSequence {
+  customerId String
+  year       Int
+  lastValue  Int
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@id([customerId, year])
+}
+
+model Inquiry {
+  id                   String                   @id @default(uuid())
+  irn                  String                   @unique
+  irnYear              Int
+  irnSerial            Int
+  customerId           String
+  customer             Customer                 @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  source               InquirySource
+  sourceReference      String?
+  receivedAt           DateTime
+  productCategory      String?
+  seasonProgram        String?
+  destination          String?
+  estimatedQuantity    Decimal?                 @db.Decimal(20, 4)
+  quantityUnit         String?
+  targetDate           DateTime?                @db.Date
+  merchandiserId       String
+  merchandiser         User                     @relation("InquiryMerchandiser", fields: [merchandiserId], references: [id], onDelete: Restrict)
+  priority             InquiryPriority          @default(NORMAL)
+  responseDueAt        DateTime
+  nextAction           String
+  status               InquiryStatus            @default(REGISTERED)
+  statusReason         String?
+  duplicateOfId        String?
+  duplicateOf          Inquiry?                 @relation("DuplicateInquiry", fields: [duplicateOfId], references: [id], onDelete: Restrict)
+  duplicates           Inquiry[]                @relation("DuplicateInquiry")
+  originalEvidenceHash String
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  createdById          String
+  createdBy            User                     @relation("InquiryCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  evidence             InquiryEvidence[]
+  history              InquiryStatusHistory[]
+  acknowledgements     InquiryAcknowledgement[]
+
+  @@unique([customerId, irnYear, irnSerial])
+  @@index([customerId, createdAt])
+  @@index([merchandiserId, status])
+  @@index([status, responseDueAt])
+  @@index([customerId, originalEvidenceHash])
+  @@index([customerId, sourceReference])
+  @@index([duplicateOfId])
+}
+
+model InquiryEvidence {
+  id                 String            @id @default(uuid())
+  inquiryId          String
+  inquiry            Inquiry           @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  source             InquirySource
+  receivedAt         DateTime
+  message            String?
+  reference          String?
+  correctsEvidenceId String?
+  correctsEvidence   InquiryEvidence?  @relation("EvidenceCorrection", fields: [correctsEvidenceId], references: [id], onDelete: Restrict)
+  corrections        InquiryEvidence[] @relation("EvidenceCorrection")
+  filename           String?
+  mediaType          String?
+  byteSize           Int?
+  attachmentBytes    Bytes?
+  attachmentSha256   String?
+  contentSha256      String
+  uploadedById       String
+  uploadedBy         User              @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt          DateTime          @default(now())
+
+  @@index([inquiryId, createdAt])
+  @@index([correctsEvidenceId])
+}
+
+model InquiryAcknowledgement {
+  id             String        @id @default(uuid())
+  inquiryId      String
+  inquiry        Inquiry       @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  acknowledgedAt DateTime
+  channel        InquirySource
+  recipient      String
+  message        String?
+  reference      String?
+  recordedById   String
+  recordedBy     User          @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  createdAt      DateTime      @default(now())
+
+  @@index([inquiryId, createdAt])
+}
+
+model InquiryStatusHistory {
+  id             String         @id @default(uuid())
+  inquiryId      String
+  inquiry        Inquiry        @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  previousStatus InquiryStatus?
+  newStatus      InquiryStatus
+  changedById    String
+  changedBy      User           @relation(fields: [changedById], references: [id], onDelete: Restrict)
+  reason         String?
+  notes          String?
+  createdAt      DateTime       @default(now())
+
+  @@index([inquiryId, createdAt])
+}
+
+model BusinessAuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  entityType String
+  entityId   String
+  oldValues  Json?
+  newValues  Json?
+  reason     String?
+  requestId  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
 }
