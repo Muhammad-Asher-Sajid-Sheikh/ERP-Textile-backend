@@ -38,6 +38,10 @@ enum AuditActionType {
   BOM_CREATED
   BOM_UPDATED
   BOM_DELETED
+
+  OWI_CREATED
+  OWI_UPDATED
+  OWI_DELETED
 }
 
 model User {
@@ -374,4 +378,51 @@ model OrderBomItem {
 
   @@index([bomId, stageCode])
   @@map("order_bom_items")
+}
+
+
+//Order Working Instructions
+
+enum OwiStatus {
+  DRAFT
+  APPROVED
+  SUPERSEDED
+}
+
+model OrderWorkingInstruction {
+  id              String     @id @default(uuid())
+  icnNo           String
+  atxScIon        String?
+  skuId           String
+  orderBomId      String?
+  orderBom        OrderBom?  @relation(fields: [orderBomId], references: [id])
+
+  // Static B3/B4 Product Spec fields stored in PostgreSQL
+  productFamily   String?
+  construction    String?
+  composition     String?
+  gsmOrWeight     String?
+  dimensions      String?
+  shadeOrColour   String?
+  finish          String?
+  packingSpec     String?
+
+  // Version Control & MongoDB Payload Link
+  version         Int        @default(1)
+  status          OwiStatus  @default(DRAFT)
+  mongoPayloadId  String     // ObjectId string pointing to MongoDB OWI stage document
+  revisionReason  String?
+
+  // Governance & Audit
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([icnNo, skuId, version])
+  @@index([icnNo])
+  @@index([atxScIon])
+  @@map("order_wip_instructions")
 }

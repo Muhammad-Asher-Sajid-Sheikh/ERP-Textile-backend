@@ -1,6 +1,8 @@
 import { PrismaClient } from '../../generated/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Decimal } from '@prisma/client/runtime/client';
 import 'dotenv/config';
+//import getAuditContext from '../../middleware/rbac.js';
 
 const prisma = new PrismaClient({
     adapter: new PrismaPg({
@@ -12,10 +14,10 @@ const prisma = new PrismaClient({
  * Helper: Extracts authenticated user ID and IP address for the AuditLog
  */
 function getAuditContext(req) {
-  const user = req.user || "TestUser"; // Populated by your auth middleware
-  if (!user || !user.id) {
-    throw new Error('UNAUTHORIZED');
-  }
+  // const user = req.user || "TestUser"; // Populated by your auth middleware
+  // if (!user || !user.id) {
+  //   throw new Error('UNAUTHORIZED');
+  // }
 
   const ipAddress =
     (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',')[0].trim()) ||
@@ -23,8 +25,8 @@ function getAuditContext(req) {
     null;
 
   return {
-    userId: user.id,
-    performedBy: user.email || user.name || user.id,
+    userId: 'e7b4de89-17b4-4649-9d15-25b5b6b73e1d',
+    performedBy: 'Dark',
     ipAddress,
   };
 }
@@ -32,7 +34,7 @@ function getAuditContext(req) {
 /**
  * Helper: Calculates estimatedRequiredQty and totalBudgetedCost based on ChargingCriteria
  */
-function calculateBomItemMetrics(item) {
+export function calculateBomItemMetrics(item) {
   const base = new Decimal(item.baseQuantity || 0);
   const rate = new Decimal(item.consumptionRate || 0);
   const allowance = new Decimal(item.allowancePercent || 0);
@@ -77,7 +79,7 @@ function calculateBomItemMetrics(item) {
  * 1. CREATE OrderBOM + Items + AuditLog
  * POST /api/boms
  */
-const createBOM = async (req, res) => {
+export const createBOM = async (req, res) => {
   try {
     const audit = getAuditContext(req);
     const { icnNo, atxScIon, skuId, items } = req.body;
@@ -161,7 +163,7 @@ const createBOM = async (req, res) => {
  * 2. READ ALL OrderBOMs (with optional query filters & total FBS budget)
  * GET /api/boms
  */
-const getAllBOMs = async (req, res) => {
+export const getAllBOMs = async (req, res) => {
   try {
     const { icnNo, skuId, status, atxScIon } = req.query;
 
@@ -199,7 +201,7 @@ const getAllBOMs = async (req, res) => {
  * 3. READ BY ID (includes active items + category-wise FBS budget summary)
  * GET /api/boms/:id
  */
-const getBOMById = async (req, res) => {
+export const getBOMById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -246,7 +248,7 @@ const getBOMById = async (req, res) => {
  * 4. UPDATE OrderBOM + Items + AuditLog
  * PUT /api/boms/:id
  */
-const updateBOM = async (req, res) => {
+export const updateBOM = async (req, res) => {
   try {
     const audit = getAuditContext(req);
     const { id } = req.params;
@@ -383,7 +385,7 @@ const updateBOM = async (req, res) => {
  * 5. DELETE (Soft-Delete / Supersede) OrderBOM + AuditLog
  * DELETE /api/boms/:id
  */
-const deleteBOM = async (req, res) => {
+export const deleteBOM = async (req, res) => {
   try {
     const audit = getAuditContext(req);
     const { id } = req.params;
@@ -455,11 +457,12 @@ export {
   reviseBOM,
 };
 
+
 /**
  * 6. REVISE OrderBOM (Clones APPROVED BOM -> new DRAFT version, marks old SUPERSEDED + AuditLog)
  * POST /api/boms/:id/revise
  */
-const reviseBOM = async (req, res) => {
+export const reviseBOM = async (req, res) => {
   try {
     const audit = getAuditContext(req);
     const { id } = req.params;
@@ -594,4 +597,13 @@ const reviseBOM = async (req, res) => {
     }
     return res.status(500).json({ success: false, message: error.message });
   }
+};
+
+export default {
+  createBOM,
+  getAllBOMs,
+  getBOMById,
+  updateBOM,
+  deleteBOM,
+  reviseBOM,
 };

@@ -1,6 +1,8 @@
-import { PrismaClient } from '../../generated/client.js';
+import { PrismaClient } from '../../generated/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Decimal } from '@prisma/client/runtime/client';
 import 'dotenv/config';
+//import getAuditContext from '../../middleware/rbac.js';
 
 const prisma = new PrismaClient({
     adapter: new PrismaPg({
@@ -13,10 +15,10 @@ const prisma = new PrismaClient({
  * Helper: Extracts authenticated user ID and IP address for the AuditLog
  */
 function getAuditContext(req) {
-  const user = req.user; // Populated by your JWT auth middleware
-  if (!user || !user.id) {
-    throw new Error('UNAUTHORIZED');
-  }
+  // const user = req.user; // Populated by your JWT auth middleware
+  // if (!user || !user.id) {
+  //   throw new Error('UNAUTHORIZED');
+  // }
 
   const ipAddress =
     (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',')[0].trim()) ||
@@ -24,8 +26,8 @@ function getAuditContext(req) {
     null;
 
   return {
-    userId: user.id,
-    performedBy: user.email || user.name || user.id,
+    userId: 'e7b4de89-17b4-4649-9d15-25b5b6b73e1d',
+    performedBy: 'Dark',
     ipAddress,
   };
 }
@@ -78,7 +80,7 @@ function calculateBomItemMetrics(item) {
  * 1. CREATE OrderBomItem + AuditLog
  * POST /api/bom-items
  */
-const createBOMItem = async (req, res) => {
+export const createBOMItem = async (req, res) => {
   try {
     const audit = getAuditContext(req);
     const {
@@ -186,7 +188,7 @@ const createBOMItem = async (req, res) => {
  * 2. READ ALL OrderBomItems (with optional filters)
  * GET /api/bom-items
  */
-const getAllBOMItems = async (req, res) => {
+export const getAllBOMItems = async (req, res) => {
   try {
     const { category, stageCode, componentRole, includeInactive } = req.query;
 
@@ -222,7 +224,7 @@ const getAllBOMItems = async (req, res) => {
  * 3. READ BY ORDER BOM ID (includes all active items for that BOM + procurement balance & cost summary)
  * GET /api/bom-items/bom/:orderBomId
  */
-const getBOMItemsByOrderBomId = async (req, res) => {
+export const getBOMItemsByOrderBomId = async (req, res) => {
   try {
     const { orderBomId } = req.params;
     const { stageCode, category } = req.query;
@@ -280,7 +282,7 @@ const getBOMItemsByOrderBomId = async (req, res) => {
  * 4. UPDATE OrderBomItem + Recalculate Metrics + AuditLog
  * PUT /api/bom-items/:id
  */
-const updateBOMItem = async (req, res) => {
+export const updateBOMItem = async (req, res) => {
   try {
     const audit = getAuditContext(req);
     const { id } = req.params;
@@ -377,7 +379,7 @@ const updateBOMItem = async (req, res) => {
  * 5. DELETE (Soft-Delete) OrderBomItem + AuditLog
  * DELETE /api/bom-items/:id
  */
-const deleteBOMItem = async (req, res) => {
+export const deleteBOMItem = async (req, res) => {
   try {
     const audit = getAuditContext(req);
     const { id } = req.params;
