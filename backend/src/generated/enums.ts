@@ -37,7 +37,106 @@ export const AuditActionType = {
   ROLE_CHANGED: 'ROLE_CHANGED',
   PASSWORD_CHANGED: 'PASSWORD_CHANGED',
   LOGIN_ATTEMPT: 'LOGIN_ATTEMPT',
-  LOGIN_FAILED: 'LOGIN_FAILED'
+  LOGIN_FAILED: 'LOGIN_FAILED',
+  BOM_CREATED: 'BOM_CREATED',
+  BOM_UPDATED: 'BOM_UPDATED',
+  BOM_DELETED: 'BOM_DELETED'
 } as const
 
 export type AuditActionType = (typeof AuditActionType)[keyof typeof AuditActionType]
+
+
+export const SampleType = {
+  APPROVAL_SAMPLE: 'APPROVAL_SAMPLE',
+  PHOTO_SAMPLE: 'PHOTO_SAMPLE',
+  PPS: 'PPS',
+  PACKING_SAMPLE: 'PACKING_SAMPLE'
+} as const
+
+export type SampleType = (typeof SampleType)[keyof typeof SampleType]
+
+
+export const InternalQcStatus = {
+  PENDING: 'PENDING',
+  PASSED: 'PASSED',
+  FAILED: 'FAILED'
+} as const
+
+export type InternalQcStatus = (typeof InternalQcStatus)[keyof typeof InternalQcStatus]
+
+
+export const CustomerSampleStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  DISAPPROVED: 'DISAPPROVED'
+} as const
+
+export type CustomerSampleStatus = (typeof CustomerSampleStatus)[keyof typeof CustomerSampleStatus]
+
+
+export const ReasonCategory = {
+  SHADE_MISMATCH: 'SHADE_MISMATCH',
+  MEASUREMENT_DEFECT: 'MEASUREMENT_DEFECT',
+  CONSTRUCTION_ERROR: 'CONSTRUCTION_ERROR',
+  FABRIC_QUALITY: 'FABRIC_QUALITY',
+  TRIM_PACKING_DEFECT: 'TRIM_PACKING_DEFECT',
+  OTHER: 'OTHER'
+} as const
+
+export type ReasonCategory = (typeof ReasonCategory)[keyof typeof ReasonCategory]
+
+
+export const StageStatus = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  DELAYED: 'DELAYED'
+} as const
+
+export type StageStatus = (typeof StageStatus)[keyof typeof StageStatus]
+
+
+export const Department = {
+  MERCHANDISING: 'MERCHANDISING',
+  SCM: 'SCM',
+  PRODUCTION: 'PRODUCTION',
+  QUALITY: 'QUALITY',
+  ACCOUNTS: 'ACCOUNTS'
+} as const
+
+export type Department = (typeof Department)[keyof typeof Department]
+
+
+export const BomCategory = {
+  YARN: 'YARN',
+  FABRIC: 'FABRIC',
+  DYE_CHEMICAL: 'DYE_CHEMICAL',
+  TRIM_ACCESSORY: 'TRIM_ACCESSORY',
+  PACKING: 'PACKING',
+  OTHER: 'OTHER'
+} as const
+
+export type BomCategory = (typeof BomCategory)[keyof typeof BomCategory]
+
+
+export const BomStatus = {
+  DRAFT: 'DRAFT',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  APPROVED: 'APPROVED',
+  REVISED: 'REVISED',
+  SUPERSEDED: 'SUPERSEDED'
+} as const
+
+export type BomStatus = (typeof BomStatus)[keyof typeof BomStatus]
+
+
+export const ChargingCriteria = {
+  PER_PIECE: 'PER_PIECE',
+  PER_SET: 'PER_SET',
+  PER_KG_WEIGHT: 'PER_KG_WEIGHT',
+  OWF_PERCENT: 'OWF_PERCENT',
+  PER_CARTON: 'PER_CARTON',
+  FIXED_ORDER_TOTAL: 'FIXED_ORDER_TOTAL'
+} as const
+
+export type ChargingCriteria = (typeof ChargingCriteria)[keyof typeof ChargingCriteria]

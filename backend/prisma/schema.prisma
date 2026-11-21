@@ -35,6 +35,13 @@ enum AuditActionType {
   PASSWORD_CHANGED
   LOGIN_ATTEMPT
   LOGIN_FAILED
+  BOM_CREATED
+  BOM_UPDATED
+  BOM_DELETED
+
+  OWI_CREATED
+  OWI_UPDATED
+  OWI_DELETED
 }
 
 model User {
@@ -89,7 +96,7 @@ model AuditLog {
 
 model OrderToken{
   id            String            @id @default(uuid())
-  productFamilies ProductFamily[] // Back-relation field
+  //productFamilies ProductFamily[] // Back-relation field
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now())
@@ -97,21 +104,323 @@ model OrderToken{
 
 // MERCHANDISE Department
 
-model ProductFamily{
-  id            String            @id @default(uuid())
+enum SampleType {
+  APPROVAL_SAMPLE
+  PHOTO_SAMPLE
+  PPS
+  PACKING_SAMPLE
 }
 
-model Products{
-  id            String            @id @default(uuid())
-  orderId       String// Scalar field storing the foreign key
-  order         OrderToken  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+enum InternalQcStatus {
+  PENDING
+  PASSED
+  FAILED
+}
 
-  productType   String
-  productList   String?
+enum CustomerSampleStatus {
+  PENDING
+  APPROVED
+  DISAPPROVED
+}
 
-  normalMaterial  String?
-  productStage    String?
+enum ReasonCategory {
+  SHADE_MISMATCH
+  MEASUREMENT_DEFECT
+  CONSTRUCTION_ERROR
+  FABRIC_QUALITY
+  TRIM_PACKING_DEFECT
+  OTHER
+}
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
+//PPS
+model PreProductionSample {
+  id              String               @id @default(uuid())
+  icnNo           String
+  sampleType      SampleType           @default(PPS)
+  ppsVersion      Int                  @default(1)
+  
+  // Relational Link to OWI
+  owiId           String
+  owi             String  //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
+
+  rackId          String               // Storage rack reference (e.g., "1", "R-02")
+  qcStatus        InternalQcStatus     @default(PENDING)
+  isApproved      Boolean              @default(false) // Internal Management Sign-off
+  isLocked        Boolean              @default(false)
+
+  dispatchDate    DateTime?
+  receivedDate    DateTime?
+  
+  status          CustomerSampleStatus @default(PENDING) // Customer Feedback Status
+  reasonCategory  ReasonCategory?
+  remarks         String?              @db.Text
+
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([icnNo])
+  @@index([owiId])
+  @@map("pre_production_samples")
+}
+
+
+// T&A Planning
+enum StageStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+enum Department {
+  MERCHANDISING
+  SCM
+  PRODUCTION
+  QUALITY
+  ACCOUNTS
+}
+
+// 1. Parent T&A Header Model
+model TimeActionPlan {
+  id                 String           @id @default(uuid())
+  icnNo              String
+  owiId              String
+  owi                String           //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
+  
+  orderDate          DateTime
+  shipmentDeadline   DateTime
+  totalLeadTimeDays  Int              // Auto-calculated total duration
+  
+  // Relation: One T&A plan has many stages stored in a proper table
+  stages             TimeActionStage[] 
+  
+  taVersion          Int              @default(1)
+  isLocked           Boolean          @default(false)
+  criticalPathFlag   Boolean          @default(false)
+
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([icnNo])
+  @@index([owiId])
+  @@map("time_action_plans")
+}
+
+// 2. Child Stage Model (Enforces Enums & Individual Database Rows)
+model TimeActionStage {
+  id                    String         @id @default(uuid())
+  timeActionPlanId      String
+  timeActionPlan        TimeActionPlan @relation(fields: [timeActionPlanId], references: [id], onDelete: Cascade)
+  
+  stageName             String
+  plannedStartDate      DateTime?
+  plannedEndDate        DateTime?
+  actualStartDate       DateTime?
+  actualEndDate         DateTime?
+  
+  // Optional until assigned during T&A planning
+  responsibleDepartment Department?     
+  status                StageStatus    @default(PENDING)
+
+  @@index([timeActionPlanId])
+  @@index([status])
+  @@index([responsibleDepartment])
+  @@map("time_action_stages")
+}
+
+
+// Broker
+model Broker {
+  id               String                   @id @default(uuid())
+  brokerName       String                   // Name of the broker, agent, or third-party
+  contactPerson    String?
+  email            String?
+  phone            String?
+  
+  // Relation to broker tracking records
+  trackingRecords  BrokerThirdPartyRecord[]
+
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@map("brokers")
+}
+
+model BrokerThirdPartyRecord {
+  id            String   @id @default(uuid())
+  icnNo         String
+  
+  brokerId      String
+  broker        Broker   @relation(fields: [brokerId], references: [id])
+  
+  stage         String   // e.g., Commission Agreement, Sample Dispatch, Payment Clearance
+  priceCost     Float    // Commission amount or agreed financial cost
+  
+  dateToSent    DateTime?
+  dateToReceive DateTime?
+  
+  isApproved    Boolean  @default(false) // Management sign-off flag
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([icnNo])
+  @@index([brokerId])
+  @@map("broker_third_party_records")
+}
+
+
+//Bill Of Materials
+
+enum BomCategory {
+  YARN
+  FABRIC
+  DYE_CHEMICAL
+  TRIM_ACCESSORY
+  PACKING
+  OTHER
+}
+
+enum BomStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REVISED
+  SUPERSEDED
+}
+
+enum ChargingCriteria {
+  PER_PIECE          // Multiplies against total order pieces
+  PER_SET            // Multiplies against total order sets
+  PER_KG_WEIGHT      // Multiplies against total greige/finished weight
+  OWF_PERCENT        // % On Weight of Fabric (for dyes/chemicals)
+  PER_CARTON         // Multiplies against calculated carton count
+  FIXED_ORDER_TOTAL  // Flat quantity for the entire order
+}
+
+model OrderBom {
+  id              String         @id @default(uuid())
+  icnNo           String         // Links to Inquiry Control Number
+  atxScIon        String?        // Links to governing ATX SC / ION
+  skuId           String         // Links to the specific Article/SKU
+  
+  version         Int            @default(1)
+  status          BomStatus      @default(DRAFT)
+  revisionReason  String?        // Required when version > 1
+  
+  // Audit & Governance
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  
+  items           OrderBomItem[]
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([icnNo, skuId, version])
+  @@index([icnNo])
+  @@index([atxScIon])
+  @@map("order_boms")
+}
+
+model OrderBomItem {
+  id                   String           @id @default(uuid())
+  bomId                String
+  bom                  OrderBom         @relation(fields: [bomId], references: [id])
+
+  // 1. User-Selected Selectors (Flexible for any item)
+  category             BomCategory
+  componentRole        String?          // Optional tag: "PILE", "GROUND", "NORMAL_WEFT", "BORDER_WEFT", "MAIN_LABEL", etc.
+  materialCode         String?          // Optional link to Inventory/Material Master
+  materialName         String
+  specification        String?          // Free-text specs (e.g., "20/1 Carded Cotton" or "Satin Care Label")
+  stageCode            String?          // Optional link to consuming stage (e.g., "WEAVING", "STITCHING")
+
+  // 2. Variant Targeting (Null = applies to all shades/sizes)
+  applicableShade      String?
+  applicableSize       String?
+
+  // 3. Calculation & Unit Selectors
+  chargingCriteria     ChargingCriteria
+  uom                  String           // Consumption UOM: kg, lbs, mtr, pcs, cones, cartons
+  baseQuantity         Decimal          @db.Decimal(12, 4) // Order pieces, sets, or fabric kg this applies to
+  consumptionRate      Decimal          @db.Decimal(10, 4) // Net usage per unit of chargingCriteria
+  allowancePercent     Decimal          @default(0) @db.Decimal(5, 2) // Product/stage-specific wastage %
+  
+  // 4. Procurement Unit Conversion (Optional)
+  purchaseUom          String?          // e.g., "cones", "rolls", "drums"
+  conversionFactor     Decimal          @default(1) @db.Decimal(10, 4)
+
+  // 5. System-Calculated & Reconciled Quantities
+  estimatedRequiredQty Decimal          @db.Decimal(12, 4) // Calculated: baseQuantity * consumptionRate * (1 + allowance%)
+  actualFirstBatchRate Decimal?         @db.Decimal(10, 4) // Recorded after WF-14 Gate A trial lot
+  actualConsumedQty    Decimal          @default(0) @db.Decimal(12, 4)
+  procuredQty          Decimal          @default(0) @db.Decimal(12, 4)
+  usableStockQty       Decimal          @default(0) @db.Decimal(12, 4)
+
+  // 6. Frozen ECS Baseline Link (for FBS calculation)
+  ecsLineItemId        String?          // Links to the approved ECS item
+  ecsFrozenUnitRate    Decimal          @db.Decimal(12, 4) // Locked rate from ECS (never overwritten)
+  totalBudgetedCost    Decimal          @db.Decimal(14, 2) // Calculated: estimatedRequiredQty * ecsFrozenUnitRate
+
+  // 7. Extra Unforeseen Attributes (Safety Valve)
+  extraAttributes      Json?            // PostgreSQL JSONB for any extra buyer/technical notes
+
+  // 8. Soft-Delete / Audit Compliance
+  isActive             Boolean          @default(true)
+  remarks              String?
+
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([bomId, stageCode])
+  @@map("order_bom_items")
+}
+
+
+//Order Working Instructions
+
+enum OwiStatus {
+  DRAFT
+  APPROVED
+  SUPERSEDED
+}
+
+model OrderWorkingInstruction {
+  id              String     @id @default(uuid())
+  icnNo           String
+  atxScIon        String?
+  skuId           String
+  orderBomId      String?
+  orderBom        OrderBom?  @relation(fields: [orderBomId], references: [id])
+
+  // Static B3/B4 Product Spec fields stored in PostgreSQL
+  productFamily   String?
+  construction    String?
+  composition     String?
+  gsmOrWeight     String?
+  dimensions      String?
+  shadeOrColour   String?
+  finish          String?
+  packingSpec     String?
+
+  // Version Control & MongoDB Payload Link
+  version         Int        @default(1)
+  status          OwiStatus  @default(DRAFT)
+  mongoPayloadId  String     // ObjectId string pointing to MongoDB OWI stage document
+  revisionReason  String?
+
+  // Governance & Audit
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([icnNo, skuId, version])
+  @@index([icnNo])
+  @@index([atxScIon])
+  @@map("order_wip_instructions")
 }

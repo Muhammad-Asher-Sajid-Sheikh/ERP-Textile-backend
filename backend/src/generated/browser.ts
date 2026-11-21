@@ -32,3 +32,43 @@ export type RefreshToken = Prisma.RefreshTokenModel
  * 
  */
 export type AuditLog = Prisma.AuditLogModel
+/**
+ * Model OrderToken
+ * 
+ */
+export type OrderToken = Prisma.OrderTokenModel
+/**
+ * Model PreProductionSample
+ * 
+ */
+export type PreProductionSample = Prisma.PreProductionSampleModel
+/**
+ * Model TimeActionPlan
+ * 
+ */
+export type TimeActionPlan = Prisma.TimeActionPlanModel
+/**
+ * Model TimeActionStage
+ * 
+ */
+export type TimeActionStage = Prisma.TimeActionStageModel
+/**
+ * Model Broker
+ * 
+ */
+export type Broker = Prisma.BrokerModel
+/**
+ * Model BrokerThirdPartyRecord
+ * 
+ */
+export type BrokerThirdPartyRecord = Prisma.BrokerThirdPartyRecordModel
+/**
+ * Model OrderBom
+ * 
+ */
+export type OrderBom = Prisma.OrderBomModel
+/**
+ * Model OrderBomItem
+ * 
+ */
+export type OrderBomItem = Prisma.OrderBomItemModel

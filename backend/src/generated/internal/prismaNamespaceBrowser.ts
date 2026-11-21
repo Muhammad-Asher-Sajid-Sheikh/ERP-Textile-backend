@@ -53,7 +53,15 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   RefreshToken: 'RefreshToken',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  OrderToken: 'OrderToken',
+  PreProductionSample: 'PreProductionSample',
+  TimeActionPlan: 'TimeActionPlan',
+  TimeActionStage: 'TimeActionStage',
+  Broker: 'Broker',
+  BrokerThirdPartyRecord: 'BrokerThirdPartyRecord',
+  OrderBom: 'OrderBom',
+  OrderBomItem: 'OrderBomItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -118,12 +126,168 @@ export const AuditLogScalarFieldEnum = {
 export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
 
 
+export const OrderTokenScalarFieldEnum = {
+  id: 'id',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderTokenScalarFieldEnum = (typeof OrderTokenScalarFieldEnum)[keyof typeof OrderTokenScalarFieldEnum]
+
+
+export const PreProductionSampleScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  sampleType: 'sampleType',
+  ppsVersion: 'ppsVersion',
+  owiId: 'owiId',
+  owi: 'owi',
+  rackId: 'rackId',
+  qcStatus: 'qcStatus',
+  isApproved: 'isApproved',
+  isLocked: 'isLocked',
+  dispatchDate: 'dispatchDate',
+  receivedDate: 'receivedDate',
+  status: 'status',
+  reasonCategory: 'reasonCategory',
+  remarks: 'remarks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PreProductionSampleScalarFieldEnum = (typeof PreProductionSampleScalarFieldEnum)[keyof typeof PreProductionSampleScalarFieldEnum]
+
+
+export const TimeActionPlanScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  owiId: 'owiId',
+  owi: 'owi',
+  orderDate: 'orderDate',
+  shipmentDeadline: 'shipmentDeadline',
+  totalLeadTimeDays: 'totalLeadTimeDays',
+  taVersion: 'taVersion',
+  isLocked: 'isLocked',
+  criticalPathFlag: 'criticalPathFlag',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TimeActionPlanScalarFieldEnum = (typeof TimeActionPlanScalarFieldEnum)[keyof typeof TimeActionPlanScalarFieldEnum]
+
+
+export const TimeActionStageScalarFieldEnum = {
+  id: 'id',
+  timeActionPlanId: 'timeActionPlanId',
+  stageName: 'stageName',
+  plannedStartDate: 'plannedStartDate',
+  plannedEndDate: 'plannedEndDate',
+  actualStartDate: 'actualStartDate',
+  actualEndDate: 'actualEndDate',
+  responsibleDepartment: 'responsibleDepartment',
+  status: 'status'
+} as const
+
+export type TimeActionStageScalarFieldEnum = (typeof TimeActionStageScalarFieldEnum)[keyof typeof TimeActionStageScalarFieldEnum]
+
+
+export const BrokerScalarFieldEnum = {
+  id: 'id',
+  brokerName: 'brokerName',
+  contactPerson: 'contactPerson',
+  email: 'email',
+  phone: 'phone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BrokerScalarFieldEnum = (typeof BrokerScalarFieldEnum)[keyof typeof BrokerScalarFieldEnum]
+
+
+export const BrokerThirdPartyRecordScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  brokerId: 'brokerId',
+  stage: 'stage',
+  priceCost: 'priceCost',
+  dateToSent: 'dateToSent',
+  dateToReceive: 'dateToReceive',
+  isApproved: 'isApproved',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BrokerThirdPartyRecordScalarFieldEnum = (typeof BrokerThirdPartyRecordScalarFieldEnum)[keyof typeof BrokerThirdPartyRecordScalarFieldEnum]
+
+
+export const OrderBomScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  atxScIon: 'atxScIon',
+  skuId: 'skuId',
+  version: 'version',
+  status: 'status',
+  revisionReason: 'revisionReason',
+  createdById: 'createdById',
+  approvedById: 'approvedById',
+  approvedAt: 'approvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderBomScalarFieldEnum = (typeof OrderBomScalarFieldEnum)[keyof typeof OrderBomScalarFieldEnum]
+
+
+export const OrderBomItemScalarFieldEnum = {
+  id: 'id',
+  bomId: 'bomId',
+  category: 'category',
+  componentRole: 'componentRole',
+  materialCode: 'materialCode',
+  materialName: 'materialName',
+  specification: 'specification',
+  stageCode: 'stageCode',
+  applicableShade: 'applicableShade',
+  applicableSize: 'applicableSize',
+  chargingCriteria: 'chargingCriteria',
+  uom: 'uom',
+  baseQuantity: 'baseQuantity',
+  consumptionRate: 'consumptionRate',
+  allowancePercent: 'allowancePercent',
+  purchaseUom: 'purchaseUom',
+  conversionFactor: 'conversionFactor',
+  estimatedRequiredQty: 'estimatedRequiredQty',
+  actualFirstBatchRate: 'actualFirstBatchRate',
+  actualConsumedQty: 'actualConsumedQty',
+  procuredQty: 'procuredQty',
+  usableStockQty: 'usableStockQty',
+  ecsLineItemId: 'ecsLineItemId',
+  ecsFrozenUnitRate: 'ecsFrozenUnitRate',
+  totalBudgetedCost: 'totalBudgetedCost',
+  extraAttributes: 'extraAttributes',
+  isActive: 'isActive',
+  remarks: 'remarks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderBomItemScalarFieldEnum = (typeof OrderBomItemScalarFieldEnum)[keyof typeof OrderBomItemScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -140,4 +304,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
