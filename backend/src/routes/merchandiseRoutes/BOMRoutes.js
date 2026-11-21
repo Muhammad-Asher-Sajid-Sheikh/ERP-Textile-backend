@@ -1,16 +1,17 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   createBOM,
   getAllBOMs,
   getBOMById,
   updateBOM,
   deleteBOM,
   reviseBOM,
-} = require('../../controller/Merchandise/BOMController');
+} from '../../controller/Merchandise/BOMController.js';
+
+const router = express.Router();
 
 // Import your authentication middleware so req.user is populated for AuditLog
-// const { authenticate } = require('../middlewares/authMiddleware');
+// import { authenticate } from '../middlewares/authMiddleware.js';
 // router.use(authenticate);
 
 router.post('/', createBOM);
@@ -20,4 +21,4 @@ router.put('/:id', updateBOM);
 router.delete('/:id', deleteBOM);
 router.post('/:id/revise', reviseBOM);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/client.js';
+import { PrismaClient } from '../../generated/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
 
@@ -441,7 +441,7 @@ const deleteBOMItem = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createBOMItem,
   getAllBOMItems,
   getBOMItemsByOrderBomId,

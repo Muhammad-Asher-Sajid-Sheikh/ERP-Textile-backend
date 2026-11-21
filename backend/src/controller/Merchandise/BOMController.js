@@ -446,12 +446,13 @@ const deleteBOM = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createBOM,
   getAllBOMs,
   getBOMById,
   updateBOM,
   deleteBOM,
+  reviseBOM,
 };
 
 /**

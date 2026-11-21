@@ -11,7 +11,7 @@ import { checkApproved } from './middleware/rbac.js';
 
 //Routes
 import authRoutes from './routes/auth.js';
-import merchandiseRoutes from './routes/merchandiseRoutes.js';
+
 import merchandiseRoutes from './routes/merchandiseRoutes/merchandiseRoutes.js';
 import bomRoutes from './routes/merchandiseRoutes/BOMRoutes.js';
 import bomItemRoutes from './routes/merchandiseRoutes/BOMItemRoutes.js';
@@ -67,12 +67,6 @@ app.get('/health', (req, res) => {
 
 // Authentication routes (login, register, refresh, logout, etc.)
 app.use('/api/auth', authRoutes);
-// Merchandise routes
-app.use('/api/merchandise', merchandiseRoutes);
-// BOM routes
-app.use('/api/bom', bomRoutes);
-// BOM Item routes
-app.use('/api/bom-items', bomItemRoutes);
 
 // ================================================================
 // PROTECTED ROUTES (Authentication + Approval required)
@@ -83,6 +77,15 @@ app.use(checktoken);
 
 // Apply approval check to ensure only approved users can access
 app.use(checkApproved);
+
+
+// Merchandise routes
+app.use('/api/merchandise', merchandiseRoutes);
+// BOM routes
+app.use('/api/bom', bomRoutes);
+// BOM Item routes
+app.use('/api/bom-items', bomItemRoutes);
+
 
 
 // Merchandise routes
