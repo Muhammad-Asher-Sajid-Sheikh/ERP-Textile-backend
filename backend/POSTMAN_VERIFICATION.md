@@ -236,3 +236,317 @@ For a cross-customer duplicate check, register an inquiry for `other_customer_id
 ## Completion record
 
 Record date, actor roles, environment, requests actually sent, HTTP results and resulting IDs/IRNs in the team's UAT record. Verify database counts, append-only behavior, transaction rollback and permissions with an authorized operator as needed. Do not infer successful customer/inquiry behavior from `/health`, a successful build or an applied migration. Production object storage, retention, malware handling and specialized departmental authority are separate unresolved dependencies.
+
+# Manual Postman verification — WF-02, WF-03 and Management
+
+This section is additive; the foundation/WF-01 checklist above remains applicable. These requests are instructions for manual verification, not a claim that the new database-backed flows have run.
+
+## Setup and permissions
+
+Review the new migration, run `npm run migrate:deploy` against the intended development database, then `npm run generate`, `npm run build` and start the server. No reset or seed script is needed. Use an existing open inquiry created by your Marketing test user, assigned to your Merchandise test user. Existing closed/duplicate-linked inquiries cannot be used for new writes.
+
+Keep header sets M, D, A and P from the first section. GET requests have no body. Every POST/PATCH uses raw JSON and Content-Type: application/json. Every response uses the existing success envelope; lists have `data: [...]` and `meta: { page, pageSize, total }`.
+
+Additional variables (copy response values manually):
+
+- `marketing_id`: original inquiry creator's user ID.
+- `production_id`: approved Production user ID.
+- `manager_id`: designated approved Management reviewer's user ID.
+- `review_id`, `review_revision`: review `data.id` and `data.revision`.
+- `review_item_id`: missing review item's `data.items[].id`.
+- `clarification_id`, `clarification_revision`: clarification `data.id` / `data.revision`.
+- `question_id`: `data.questions[].id`.
+- `written_evidence_id`, `verbal_evidence_id`: evidence recorded with the existing WF-01 evidence endpoint, on this same inquiry.
+- `baseline_id`, `baseline_revision`, `previous_baseline_id`: baseline IDs/revisions.
+- `provisional_id`: provisional request ID.
+- `received_at`: original inquiry receipt time.
+- `request_at`: a past timestamp after inquiry receipt.
+- `response_at`: a past timestamp after request_at, exactly matching response evidence.receivedAt.
+- `follow_up_at`, `due_at`, `expiry_at`: future ISO UTC timestamps, with follow_up_at <= due_at.
+
+New ownership rules: M writes must use the inquiry's original Marketing creator. D review edits/submission require the currently assigned merchandiser. P is restricted to reviews explicitly assigned to that Production user. A may read oversight but cannot perform Marketing/Production actions. The old WF-01 role rules are unchanged.
+
+Global error expectations for all new endpoints: missing/invalid token 401; unapproved/wrong role 403; malformed JSON/UUID/enum or unknown body properties 400 VALIDATION_ERROR; absent or inaccessible inquiry/child record 404; stale expectedRevision 409 STALE_REVISION. Closed/duplicate-linked inquiry writes return 409 INQUIRY_NOT_EDITABLE. Pass actual numeric revision values, not quoted strings.
+
+## WF-02 endpoint inventory
+
+All paths below start with `/api/marketing/inquiries/{{inquiry_id}}`.
+
+| Method and suffix | Header/role | Body | Expected result and rule |
+| --- | --- | --- | --- |
+| POST `/technical-reviews` | M owner or D assigned | Review body below | 201; data.version, revision and items. One draft per inquiry; second draft 409 REVIEW_DRAFT_EXISTS. |
+| GET `/technical-reviews?page=1&pageSize=20` | M owner, D assigned, A, P assigned | None | 200 paged versions. P sees only reviews assigned to them. |
+| GET `/technical-reviews/{{review_id}}` | Same readers | None | 200 review, missingInformation, quotationBlockers, applicabilityDependency. Wrong inquiry/review pair 404 REVIEW_NOT_FOUND. |
+| PATCH `/technical-reviews/{{review_id}}` | D assigned | Full review body plus expectedRevision | 200 with incremented revision. Submitted version 409 REVIEW_FROZEN; omitted old item key 422 REVIEW_ITEM_REMOVAL_FORBIDDEN. |
+| POST `/technical-reviews/{{review_id}}/consultations` | P assigned | Consultation body | 201 findings tied to exact review revision. Another Production reviewer 403/404. |
+| POST `/technical-reviews/{{review_id}}/submit` | D assigned | Submission body | 200 immutable submittedAt/outcome. Never changes Inquiry.status. |
+
+Start with an incomplete review:
+
+```json
+{
+  "productFamily": "Woven bed linen",
+  "applicabilityReference": null,
+  "assumptions": [],
+  "notes": "TC-01 applicability requires Production/QA confirmation.",
+  "productionReviewerId": "{{production_id}}",
+  "items": [
+    {
+      "key": "product_type",
+      "area": "PRODUCT",
+      "label": "Product type",
+      "state": "VERIFIED",
+      "value": "Bed linen",
+      "requiredFor": ["QUOTATION"],
+      "applicabilityReason": "Explicit requirement identified for this inquiry; field dictionary pending.",
+      "evidenceId": "{{written_evidence_id}}"
+    },
+    {
+      "key": "fabric_composition",
+      "area": "PRODUCT",
+      "label": "Fabric composition",
+      "state": "MISSING",
+      "requiredFor": ["QUOTATION", "SAMPLE"],
+      "applicabilityReason": "Composition is unresolved for this proposed fabric.",
+      "needsProduction": true,
+      "ownerId": "{{merchandiser_id}}",
+      "dueAt": "{{due_at}}",
+      "followUpAt": "{{follow_up_at}}",
+      "escalationReason": "Costing basis is not available."
+    }
+  ]
+}
+```
+
+Each item supports PRODUCT, QUANTITY, COMMERCIAL, TIMING, PACKING or QUALITY; VERIFIED, UNVERIFIED, MISSING, ASSUMED or NOT_APPLICABLE; and stage scope QUOTATION, SAMPLE or ORDER_ACTIVATION. Empty requiredFor means no stage marked mandatory. Missing/unverified items require owner/due/follow-up; verified customer facts require written evidence. No universal field list is imposed.
+
+For PATCH, resend all fields/items above with `"expectedRevision": 1` (use the actual revision). Existing item keys cannot disappear. Set NOT_APPLICABLE with an applicabilityReason if needed. Each successful draft edit invalidates old Production consultation for submission; consult again against the returned revision.
+
+Production consultation:
+
+```json
+{
+  "expectedRevision": 1,
+  "conclusion": "TECHNICAL_HOLD",
+  "findings": "Composition and construction are required to assess manufacturability.",
+  "assumptions": []
+}
+```
+
+Other conclusions: SUPPORTED and NOT_FEASIBLE. Only the assigned Production account may enter these findings; a Marketing account cannot impersonate Production through a recordedById field.
+
+Submit the incomplete review:
+
+```json
+{
+  "expectedRevision": 1,
+  "outcome": "CUSTOMER_CLARIFICATION_REQUIRED",
+  "reason": "Request written fabric composition before further technical work."
+}
+```
+
+Other outcomes: COMPLETE_FOR_CLARIFICATION_BASELINE, TECHNICAL_REVIEW_PENDING, FEASIBLE_WITH_ASSUMPTIONS, NOT_FEASIBLE. A complete outcome with missing/unverified/assumed items returns 409 INCOMPLETE_REVIEW. A positive outcome requiring Production without current SUPPORTED findings returns 409 TECHNICAL_HOLD. NOT_FEASIBLE without a Production conclusion returns 409 PRODUCTION_CONCLUSION_REQUIRED. Feasible-with-assumptions without explicit assumptions returns 422 ASSUMPTIONS_REQUIRED.
+
+Submitted reviews cannot be edited. Create a new numbered review after clarification. A successful complete review still returns `formalCostingAllowed: false` and `quotationIssuanceAllowed: false`: TC-01 configuration and later approval workflows are not granted by this API.
+
+## WF-03 clarification endpoint inventory
+
+Use the same inquiry prefix.
+
+| Method and suffix | Header/role | Body | Expected result and rule |
+| --- | --- | --- | --- |
+| POST `/clarifications` | M owner | Request below | 201 questions with IDs and UNANSWERED state. Foreign review item 422 INVALID_REVIEW_ITEM. |
+| GET `/clarifications?page=1&pageSize=20` | M owner, D assigned, A | None | 200 paged requests, responses, pending count and ageing. |
+| GET `/clarifications/{{clarification_id}}` | Same readers | None | 200 full question/answer history; wrong parent 404 CLARIFICATION_NOT_FOUND. |
+| GET `/workflow-notices?page=1&pageSize=20` | M owner, D assigned, A | None | 200 customer-change notices with affected owner IDs and requiresBaselineReview; no unrelated audit events. |
+| PATCH `/clarifications/{{clarification_id}}` | M owner | Follow-up body | 200 revised responsibility, dates or hold. Invalid chronology 422 INVALID_CLARIFICATION_DATE. |
+| POST `/clarifications/{{clarification_id}}/responses` | M owner | Response below | 201 append-only answer. Foreign question 422 INVALID_QUESTION. |
+| POST `/clarifications/{{clarification_id}}/escalations` | M owner | Escalation body | 200 persistent escalation. Fully answered request 409 CLARIFICATION_RESOLVED. |
+
+Create one consolidated request:
+
+```json
+{
+  "subject": "Confirm bed linen requirements",
+  "requestedAt": "{{request_at}}",
+  "responsibleId": "{{merchandiser_id}}",
+  "dueAt": "{{due_at}}",
+  "followUpAt": "{{follow_up_at}}",
+  "questions": [
+    { "question": "What fabric composition is required?", "reviewItemId": "{{review_item_id}}" },
+    { "question": "What finished dimensions are required?" }
+  ]
+}
+```
+
+Copy question IDs separately. Request time must be after inquiry receipt; request <= follow-up <= due. Responsibility must be the approved inquiry owner or assigned merchandiser. The owner remains responsible for customer communication.
+
+Record a telephone answer as original WF-01 evidence first. Then POST a response:
+
+```json
+{
+  "questionId": "{{question_id}}",
+  "response": "Customer verbally requested 100% cotton.",
+  "receivedAt": "{{response_at}}",
+  "evidenceId": "{{verbal_evidence_id}}",
+  "confirmation": "WRITTEN_CONFIRMATION_PENDING"
+}
+```
+
+Expected: answer sequence 1, question still pending; no baseline/customer approval. receivedAt must exactly match the evidence time and cannot precede the clarification request or latest answer.
+
+Preserve a later EMAIL/WHATSAPP/WEBSITE response as new evidence, update response_at to its received time, and POST:
+
+```json
+{
+  "questionId": "{{question_id}}",
+  "response": "100% cotton, confirmed in writing.",
+  "receivedAt": "{{response_at}}",
+  "evidenceId": "{{written_evidence_id}}",
+  "confirmation": "WRITTEN_CONFIRMED"
+}
+```
+
+Expected: sequence 2 and both answers remain in GET history. Confirming telephone/meeting/agent/other evidence returns 422 WRITTEN_EVIDENCE_REQUIRED. Evidence from another inquiry, or an original already corrected by later evidence, returns 422 INVALID_EVIDENCE_REFERENCE. Wrong time returns 422 INVALID_RESPONSE_DATE. A later verbal change makes the latest answer pending again.
+
+Follow-up PATCH (reload revision after each response):
+
+```json
+{
+  "expectedRevision": 3,
+  "followUpAt": "{{follow_up_at}}",
+  "dueAt": "{{due_at}}",
+  "customerHold": true,
+  "reason": "Customer requested additional time."
+}
+```
+
+Use customerHold false to release the clarification hold. This does not change WF-01 Inquiry.status.
+
+Escalation POST:
+
+```json
+{ "expectedRevision": 4, "reason": "Mandatory information remains unanswered after follow-up." }
+```
+
+Management's escalation list includes pending explicit escalations and overdue follow-ups. To test overdue behaviour without clock manipulation, create a separate clarification with all valid request/follow-up/due timestamps in the past, after original inquiry receipt.
+
+## WF-03 baseline endpoint inventory
+
+Use the same inquiry prefix. Write with M owner; read with M owner, D assigned or A.
+
+| Method and suffix | Body | Expected result and rule |
+| --- | --- | --- |
+| POST `/baselines` | Create below | 201 version 1 draft, sourced facts/assumptions/open questions. Unsubmitted review 409 REVIEW_NOT_SUBMITTED. |
+| GET `/baselines?page=1&pageSize=20` | None | 200 paged version history, newest first. |
+| GET `/baselines/{{baseline_id}}` | None | 200 exact version; wrong parent 404 BASELINE_NOT_FOUND. |
+| PATCH `/baselines/{{baseline_id}}` | Full draft content below | 200 incremented revision; only unfrozen drafts. |
+| POST `/baselines/{{baseline_id}}/finalize` | Finalize below | 200 frozenAt; original snapshot is immutable. |
+| POST `/baselines/{{baseline_id}}/revise` | Revision below | 201 next numbered draft; prior frozen version retained. |
+
+Create from a submitted review:
+
+```json
+{ "reviewId": "{{review_id}}", "changeReason": "Consolidate the preliminary customer requirements." }
+```
+
+GET the draft before editing. It gathers current review facts and latest answers automatically. Do not copy only the example assertion below if the real draft contains more source facts; retain all its confirmed source assertions and IDs.
+
+```json
+{
+  "expectedRevision": 1,
+  "assertions": [
+    { "key": "product_type", "value": "Bed linen", "confirmed": true, "evidenceId": "{{written_evidence_id}}" }
+  ],
+  "assumptions": [],
+  "openQuestions": ["Awaiting written dimensions"],
+  "changeReason": "Review consolidated wording and outstanding questions."
+}
+```
+
+Draft assertions are a full replacement. Every customer assertion requires evidence; assumptions and open questions remain separate arrays. Confirmed assertions require current written evidence. Editing a frozen version returns 409 BASELINE_FROZEN.
+
+Freeze a pending snapshot if clarification remains:
+
+```json
+{ "expectedRevision": 2, "outcome": "CLARIFICATION_PENDING" }
+```
+
+Other outcomes: CUSTOMER_HOLD and BASELINE_READY_FOR_FEASIBILITY. Readiness requires no pending questions/holds, the latest usable submitted review, no unconfirmed assertions/open points and retained verified source facts. Failure returns 409 BASELINE_NOT_READY or BASELINE_FACTS_MISSING. A source change after drafting returns 409 BASELINE_SOURCE_CHANGED; reconcile via draft PATCH and retry. Freezing never grants customer approval, costing release or quotation permission.
+
+Revision:
+
+```json
+{ "reviewId": "{{review_id}}", "changeReason": "Customer supplied written composition and dimensions." }
+```
+
+Use the latest frozen version's URL. If reviewId is omitted, it reuses that baseline's exact review. A second open draft returns 409 BASELINE_DRAFT_EXISTS; revising a draft or an older frozen version returns 409 INVALID_BASELINE_REVISION. Save the previous baseline ID and verify it remains unchanged after revision/finalization. Reconcile carried historical evidence in the new draft before freezing it.
+
+For a successful readiness scenario: answer every question in writing, release customer/WF-01 holds, create a new review with all relevant facts verified (no guessed field applicability), obtain current Production SUPPORTED findings where required, submit it, revise the baseline against that review, retain all confirmed source facts, resolve open points and finalize as BASELINE_READY_FOR_FEASIBILITY. The returned quotationIssuanceAllowed must still be false.
+
+Close the inquiry using the existing WF-01 status endpoint at the end. Baseline GET then derives workflowOutcome INQUIRY_CLOSED; no second closure flag is written.
+
+## Management overview and provisional review
+
+All following reads/decisions use A. Read endpoints have no body.
+
+| Method and endpoint | Body | Expected result and rule |
+| --- | --- | --- |
+| GET `/api/management/inquiries/overview?page=1&pageSize=20` | None | 200 current review/frozen baseline, pending clarifications, technical hold, follow-ups and escalations. |
+| GET `/api/management/inquiries/{{inquiry_id}}/summary` | None | 200 one inquiry, its owner and current workflow information. |
+| GET `/api/management/clarification-escalations?page=1&pageSize=20` | None | 200 unresolved escalated/overdue requests, with responsible employees. |
+| POST `/api/marketing/inquiries/{{inquiry_id}}/provisional-review-requests` | Request below; use M owner | 201 immutable scope tied to current submitted review. It authorizes no work. |
+| GET `/api/management/provisional-review-requests?page=1&pageSize=20` | None | 200 paged requests and effective states. |
+| GET `/api/management/provisional-review-requests/{{provisional_id}}` | None | 200 exact scope, version, risks and disposition history. |
+| POST `/api/management/provisional-review-requests/{{provisional_id}}/decisions` | Decision below; designated A reviewer | 200 non-authorizing disposition, or documented conflict below. |
+
+Overview filters: customerId, merchandiserId, existing WF-01 status, reviewOutcome (latest review only), overdue=true/false. Escalation filters: inquiryId, responsibleId, overdue=true/false. Provisional list filters: inquiryId, reviewerId. All use page/pageSize (max 100).
+
+Use a separate current submitted incomplete review for provisional tests:
+
+```json
+{
+  "reviewId": "{{review_id}}",
+  "proposedActivity": "Discuss possible packing alternatives only",
+  "unaffectedScope": "No final consumption, costing, sample commitment or quotation issuance",
+  "assumptions": ["Fabric composition remains unresolved"],
+  "risks": ["Cost estimate cannot be finalized"],
+  "reviewerId": "{{manager_id}}",
+  "expiresAt": "{{expiry_at}}"
+}
+```
+
+The missingInformation snapshot is copied from that submitted review; it cannot be fabricated through request JSON. If no unresolved item exists: 422 NO_PROVISIONAL_SCOPE. If expiry is not future: 422 INVALID_EXPIRY. Unsubmitted/outdated review: 409 REVIEW_NOT_SUBMITTED / STALE_REVIEW_VERSION.
+
+Rejection:
+
+```json
+{
+  "reviewId": "{{review_id}}",
+  "disposition": "REJECTED",
+  "reason": "Obtain the missing cost basis before proceeding.",
+  "conditions": ["Submit a new request if the scope changes."]
+}
+```
+
+RETURNED_FOR_INFORMATION is also supported. Only the named Management reviewer can record a disposition (403 REVIEWER_REQUIRED otherwise). Wrong reviewId: 409 REVIEW_VERSION_MISMATCH. Second disposition: 409 REQUEST_ALREADY_REVIEWED. New technical review after request creation: 409 STALE_REVIEW_VERSION. There is no update/delete API for requests or decisions.
+
+On a fresh undecided request, attempt disposition APPROVED. Expected: 409 APPROVAL_AUTHORITY_UNCONFIGURED, because generic MANAGEMENT does not establish specialized provisional-work authority. REVOKED also returns that dependency: no grant exists in this implementation. Do not treat a request or internal review as permission to work or issue a quotation.
+
+For expiry testing, create a request with a short future expiry, wait manually, then GET and attempt a disposition. Expected: effectiveState EXPIRED, provisionalWorkAuthorized false, and 409 REQUEST_EXPIRED. Rejected requests remain visible with REJECTED state and never become valid. Every response keeps quotationIssuanceAllowed false.
+
+## Final manual scenarios
+
+1. Exercise the existing auth/customer/WF-01 regression checklist before testing new flows.
+2. Verify complete, clarification-required, technical-pending, assumed and not-feasible review outcomes; prove the appropriate blockers above.
+3. Edit a draft after Production consultation and prove old findings cannot support the new revision.
+4. Send two draft updates with the same expectedRevision; only the first succeeds.
+5. Preserve verbal then written answers; inspect both responses and confirmation changes.
+6. Verify foreign inquiry evidence, question, review and baseline IDs are rejected.
+7. Freeze/revise a baseline; compare the historical snapshot and IRN/WF-01 status.
+8. Change a source after drafting; prove finalization requires reconciliation.
+9. Verify Management overview, pending/escalated questions, overdue filtering and requiresBaselineReview after a later answer.
+10. Verify provisional rejection, return, repeated decision, expiry, mismatched version and blocked approval.
+11. Use another Marketing owner, unassigned Merchandise, unassigned Production, generic Management writes, suspended users and missing tokens to verify access denials.
+12. Close an inquiry through WF-01 and verify no new workflow write can bypass closure.
+13. Inspect existing inquiry history as Management for the new transactional business-audit actions. Verify historical customer evidence is unchanged.

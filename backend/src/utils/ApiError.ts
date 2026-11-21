@@ -8,7 +8,7 @@ export class ApiError extends Error {
     public readonly compatibility: Record<string, unknown> = {},
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
     Error.captureStackTrace(this, this.constructor);
   }
 }

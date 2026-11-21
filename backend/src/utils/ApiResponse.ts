@@ -3,7 +3,7 @@ export class ApiResponse<T = null> {
   constructor(
     public readonly statusCode: number,
     public readonly data: T,
-    public readonly message = 'Success',
+    public readonly message = "Success",
     public readonly meta?: Record<string, unknown>,
   ) {}
 }

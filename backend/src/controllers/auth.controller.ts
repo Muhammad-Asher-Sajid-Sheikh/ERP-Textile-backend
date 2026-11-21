@@ -7,7 +7,6 @@ import { actor } from "../middleware/auth.middleware.js";
 import * as input from "../validators/auth.validator.js";
 import * as auth from "../services/auth.service.js";
 import * as token from "../services/token.service.js";
-
 // Deliberate compatibility aliases: user, users, count and accesstoken remain top-level.
 export function authResponse(
   res: Response,
@@ -15,9 +14,10 @@ export function authResponse(
   message = "Success",
   status = 200,
 ) {
-  return res
-    .status(status)
-    .json({ ...new ApiResponse(status, data, message), ...data });
+  return res.status(status).json({
+    ...new ApiResponse(status, data, message),
+    ...data,
+  });
 }
 const cookieOptions = {
   httpOnly: true,
@@ -29,7 +29,9 @@ export const register = asyncHandler(async (req, res) => {
   const user = await auth.register(input.registerInput.parse(req.body), req.ip);
   authResponse(
     res,
-    { user },
+    {
+      user,
+    },
     "Registration successful! Your account is pending management approval. Check your email for confirmation.",
     201,
   );
@@ -43,18 +45,22 @@ export const login = asyncHandler(async (req, res) => {
   res.cookie("refreshtoken", result.refreshToken, cookieOptions);
   authResponse(
     res,
-    { accesstoken: result.accessToken, user: result.user },
+    {
+      accesstoken: result.accessToken,
+      user: result.user,
+    },
     "Login successful!",
   );
 });
 export const refresh = asyncHandler(async (req, res) => {
   const cookie: unknown = req.cookies?.refreshtoken;
-  if (typeof cookie !== "string" || !cookie)
+  if (typeof cookie !== "string" || !cookie) {
     throw new ApiError(
       401,
       "Refresh token not found. Please log in again.",
       "REFRESH_TOKEN_REQUIRED",
     );
+  }
   const result = await token.refreshAccessToken(
     cookie,
     req.headers.authorization?.split(" ")[1],
@@ -63,21 +69,27 @@ export const refresh = asyncHandler(async (req, res) => {
   res.cookie("refreshtoken", result.refreshToken, cookieOptions);
   authResponse(
     res,
-    { accesstoken: result.accessToken },
+    {
+      accesstoken: result.accessToken,
+    },
     "Token refreshed successfully",
   );
 });
 export const logout = asyncHandler(async (req, res) => {
   const user = actor(req);
   const cookie: unknown = req.cookies?.refreshtoken;
-  if (typeof cookie === "string")
+  if (typeof cookie === "string") {
     await token.revokeRefreshToken(cookie, user.id);
-  await auth.logAuditEvent(
+  }
+  const data = await auth.logAuditEvent(
     user.id,
     "LOGIN_ATTEMPT",
-    { status: "logout" },
+    {
+      status: "logout",
+    },
     req.ip,
   );
+  data;
   res.clearCookie("refreshtoken", {
     httpOnly: true,
     secure: env.production,
@@ -85,14 +97,18 @@ export const logout = asyncHandler(async (req, res) => {
   });
   authResponse(res, {}, "Logged out successfully");
 });
-export const profile = asyncHandler(async (req, res) =>
-  authResponse(res, { user: await auth.profile(actor(req).id) }),
-);
+export const profile = asyncHandler(async (req, res) => {
+  const data = await auth.profile(actor(req).id);
+  return authResponse(res, {
+    user: data,
+  });
+});
 export const changePassword = asyncHandler(async (req, res) => {
-  await auth.changePassword(
+  const data = await auth.changePassword(
     actor(req).id,
     input.passwordInput.parse(req.body),
     req.ip,
   );
+  data;
   authResponse(res, {}, "Password changed successfully.");
 });

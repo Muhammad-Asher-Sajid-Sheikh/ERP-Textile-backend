@@ -11,20 +11,19 @@ import * as customer from "../services/customer.service.js";
 export const create = asyncHandler(async (req, res) => {
   const data = await customer.createCustomer(
     createCustomerInput.parse(req.body),
-    { actorId: actor(req).id, requestId: req.correlationId },
+    {
+      actorId: actor(req).id,
+      requestId: req.correlationId,
+    },
   );
   res
     .status(201)
     .json(new ApiResponse(201, data, "Customer created successfully"));
 });
-export const get = asyncHandler(async (req, res) =>
-  res.json(
-    new ApiResponse(
-      200,
-      await customer.getCustomer(idParams.parse(req.params).id),
-    ),
-  ),
-);
+export const get = asyncHandler(async (req, res) => {
+  const data = await customer.getCustomer(idParams.parse(req.params).id);
+  return res.json(new ApiResponse(200, data));
+});
 export const list = asyncHandler(async (req, res) => {
   const result = await customer.listCustomers(customerQuery.parse(req.query));
   res.json(
@@ -35,7 +34,10 @@ export const update = asyncHandler(async (req, res) => {
   const data = await customer.updateCustomer(
     idParams.parse(req.params).id,
     updateCustomerInput.parse(req.body),
-    { actorId: actor(req).id, requestId: req.correlationId },
+    {
+      actorId: actor(req).id,
+      requestId: req.correlationId,
+    },
   );
   res.json(new ApiResponse(200, data, "Customer updated successfully"));
 });

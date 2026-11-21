@@ -9,7 +9,10 @@ import {
 } from "../validators/auth.validator.js";
 export const pendingUsers = asyncHandler(async (_req, res) => {
   const users = await account.pendingUsers();
-  authResponse(res, { count: users.length, users });
+  authResponse(res, {
+    count: users.length,
+    users,
+  });
 });
 const messages = {
   approve: "User approved successfully! Notification email sent.",
@@ -17,8 +20,8 @@ const messages = {
   suspend: "User suspended successfully! Notification email sent.",
   role: "User role changed successfully! Notification email sent.",
 };
-export const updateAccount = (action: keyof typeof messages) =>
-  asyncHandler(async (req, res) => {
+export const updateAccount = (action: keyof typeof messages) => {
+  return asyncHandler(async (req, res) => {
     const { id } = authIdInput.parse(req.params);
     const role = action === "role" ? roleInput.parse(req.body).role : undefined;
     const reason =
@@ -33,5 +36,12 @@ export const updateAccount = (action: keyof typeof messages) =>
       reason,
       role,
     );
-    authResponse(res, { user }, messages[action]);
+    authResponse(
+      res,
+      {
+        user,
+      },
+      messages[action],
+    );
   });
+};

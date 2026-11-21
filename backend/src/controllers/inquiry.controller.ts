@@ -6,28 +6,33 @@ import { actor } from "../middleware/auth.middleware.js";
 import { idParams, pagination } from "../validators/common.validator.js";
 import * as input from "../validators/inquiry.validator.js";
 import * as inquiry from "../services/inquiry.service.js";
-const context = (req: Request) => ({
-  actorId: actor(req).id,
-  requestId: req.correlationId,
-});
-const id = (req: Request) => idParams.parse(req.params).id;
-const page = (req: Request) => z.strictObject(pagination).parse(req.query);
+const context = (req: Request) => {
+  return {
+    actorId: actor(req).id,
+    requestId: req.correlationId,
+  };
+};
+const id = (req: Request) => {
+  return idParams.parse(req.params).id;
+};
+const page = (req: Request) => {
+  return z.strictObject(pagination).parse(req.query);
+};
 export const create = asyncHandler(async (req, res) => {
   const result = await inquiry.createInquiry(
     input.createInquiryInput.parse(req.body),
     context(req),
   );
-  res
-    .status(201)
-    .json(
-      new ApiResponse(201, result.inquiry, "Inquiry registered successfully", {
-        likelyDuplicates: result.likelyDuplicates,
-      }),
-    );
+  res.status(201).json(
+    new ApiResponse(201, result.inquiry, "Inquiry registered successfully", {
+      likelyDuplicates: result.likelyDuplicates,
+    }),
+  );
 });
-export const get = asyncHandler(async (req, res) =>
-  res.json(new ApiResponse(200, await inquiry.getInquiry(id(req), actor(req)))),
-);
+export const get = asyncHandler(async (req, res) => {
+  const data = await inquiry.getInquiry(id(req), actor(req));
+  return res.json(new ApiResponse(200, data));
+});
 export const list = asyncHandler(async (req, res) => {
   const result = await inquiry.listInquiries(
     input.inquiryQuery.parse(req.query),
@@ -37,77 +42,50 @@ export const list = asyncHandler(async (req, res) => {
     new ApiResponse(200, result.data, "Inquiries retrieved", result.meta),
   );
 });
-export const update = asyncHandler(async (req, res) =>
-  res.json(
-    new ApiResponse(
-      200,
-      await inquiry.updateInquiry(
-        id(req),
-        input.updateInquiryInput.parse(req.body),
-        context(req),
-      ),
-      "Inquiry updated",
-    ),
-  ),
-);
-export const addEvidence = asyncHandler(async (req, res) =>
-  res
+export const update = asyncHandler(async (req, res) => {
+  const data = await inquiry.updateInquiry(
+    id(req),
+    input.updateInquiryInput.parse(req.body),
+    context(req),
+  );
+  return res.json(new ApiResponse(200, data, "Inquiry updated"));
+});
+export const addEvidence = asyncHandler(async (req, res) => {
+  const data = await inquiry.addEvidence(
+    id(req),
+    input.evidenceInput.parse(req.body),
+    context(req),
+  );
+  return res.status(201).json(new ApiResponse(201, data, "Evidence preserved"));
+});
+export const acknowledge = asyncHandler(async (req, res) => {
+  const data = await inquiry.acknowledge(
+    id(req),
+    input.acknowledgementInput.parse(req.body),
+    context(req),
+  );
+  return res
     .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        await inquiry.addEvidence(
-          id(req),
-          input.evidenceInput.parse(req.body),
-          context(req),
-        ),
-        "Evidence preserved",
-      ),
-    ),
-);
-export const acknowledge = asyncHandler(async (req, res) =>
-  res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        await inquiry.acknowledge(
-          id(req),
-          input.acknowledgementInput.parse(req.body),
-          context(req),
-        ),
-        "Acknowledgement recorded",
-      ),
-    ),
-);
+    .json(new ApiResponse(201, data, "Acknowledgement recorded"));
+});
 export const linkDuplicate = asyncHandler(async (req, res) => {
   const body = input.duplicateInput.parse(req.body);
-  res.json(
-    new ApiResponse(
-      200,
-      await inquiry.linkDuplicate(
-        id(req),
-        body.duplicateOfId,
-        body.reason,
-        context(req),
-      ),
-      "Duplicate linked; both IRNs preserved",
-    ),
+  const data = await inquiry.linkDuplicate(
+    id(req),
+    body.duplicateOfId,
+    body.reason,
+    context(req),
   );
+  res.json(new ApiResponse(200, data, "Duplicate linked; both IRNs preserved"));
 });
-export const transition = asyncHandler(async (req, res) =>
-  res.json(
-    new ApiResponse(
-      200,
-      await inquiry.transition(
-        id(req),
-        input.transitionInput.parse(req.body),
-        context(req),
-      ),
-      "Inquiry status updated",
-    ),
-  ),
-);
+export const transition = asyncHandler(async (req, res) => {
+  const data = await inquiry.transition(
+    id(req),
+    input.transitionInput.parse(req.body),
+    context(req),
+  );
+  return res.json(new ApiResponse(200, data, "Inquiry status updated"));
+});
 export const history = asyncHandler(async (req, res) => {
   const result = await inquiry.history(id(req), actor(req), page(req));
   res.json(

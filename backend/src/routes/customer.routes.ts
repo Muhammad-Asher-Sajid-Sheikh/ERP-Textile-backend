@@ -4,6 +4,7 @@ import { checkApproved, requireRole } from "../middleware/rbac.middleware.js";
 import * as customer from "../controllers/customer.controller.js";
 const router = Router();
 router.use(checktoken, checkApproved, requireRole("MARKETING", "MANAGEMENT"));
+// Customer records, including their contacts and commercial parties.
 router.post("/", customer.create);
 router.get("/", customer.list);
 router.get("/:id", customer.get);

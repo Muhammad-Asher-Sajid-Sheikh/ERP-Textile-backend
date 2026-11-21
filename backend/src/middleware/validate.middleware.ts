@@ -1,11 +1,10 @@
 import type { RequestHandler } from "express";
 import type { ZodType } from "zod";
-export const validate =
-  (
-    schema: ZodType,
-    target: "body" | "params" | "query" = "body",
-  ): RequestHandler =>
-  (req, _res, next) => {
+export const validate = (
+  schema: ZodType,
+  target: "body" | "params" | "query" = "body",
+): RequestHandler => {
+  return (req, _res, next) => {
     try {
       schema.parse(req[target]);
       next();
@@ -13,3 +12,4 @@ export const validate =
       next(error);
     }
   };
+};

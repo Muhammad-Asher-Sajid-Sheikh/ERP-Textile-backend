@@ -5,15 +5,18 @@ export const authLimiter = rateLimit({
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (_req, _res, next) =>
-    next(
+  handler: (_req, _res, next) => {
+    return next(
       new ApiError(
         429,
         "Too many login attempts. Please try again after 15 minutes.",
         "RATE_LIMIT_EXCEEDED",
         [],
         true,
-        { status: 429 },
+        {
+          status: 429,
+        },
       ),
-    ),
+    );
+  },
 });

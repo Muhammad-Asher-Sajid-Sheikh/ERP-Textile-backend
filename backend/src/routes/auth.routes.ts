@@ -7,6 +7,7 @@ import * as input from "../validators/auth.validator.js";
 import * as auth from "../controllers/auth.controller.js";
 import * as account from "../controllers/account.controller.js";
 const router = Router();
+// Registration and session endpoints retain their existing rate limits.
 router.post(
   "/register",
   authLimiter,
@@ -23,6 +24,7 @@ router.post(
   validate(input.passwordInput),
   auth.changePassword,
 );
+// Only approved Management accounts can administer users.
 router.get(
   "/admin/pending-users",
   checktoken,
