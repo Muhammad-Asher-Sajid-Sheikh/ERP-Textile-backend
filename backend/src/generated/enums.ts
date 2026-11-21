@@ -37,7 +37,10 @@ export const AuditActionType = {
   ROLE_CHANGED: 'ROLE_CHANGED',
   PASSWORD_CHANGED: 'PASSWORD_CHANGED',
   LOGIN_ATTEMPT: 'LOGIN_ATTEMPT',
-  LOGIN_FAILED: 'LOGIN_FAILED'
+  LOGIN_FAILED: 'LOGIN_FAILED',
+  BOM_CREATED: 'BOM_CREATED',
+  BOM_UPDATED: 'BOM_UPDATED',
+  BOM_DELETED: 'BOM_DELETED'
 } as const
 
 export type AuditActionType = (typeof AuditActionType)[keyof typeof AuditActionType]
@@ -102,3 +105,38 @@ export const Department = {
 } as const
 
 export type Department = (typeof Department)[keyof typeof Department]
+
+
+export const BomCategory = {
+  YARN: 'YARN',
+  FABRIC: 'FABRIC',
+  DYE_CHEMICAL: 'DYE_CHEMICAL',
+  TRIM_ACCESSORY: 'TRIM_ACCESSORY',
+  PACKING: 'PACKING',
+  OTHER: 'OTHER'
+} as const
+
+export type BomCategory = (typeof BomCategory)[keyof typeof BomCategory]
+
+
+export const BomStatus = {
+  DRAFT: 'DRAFT',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  APPROVED: 'APPROVED',
+  REVISED: 'REVISED',
+  SUPERSEDED: 'SUPERSEDED'
+} as const
+
+export type BomStatus = (typeof BomStatus)[keyof typeof BomStatus]
+
+
+export const ChargingCriteria = {
+  PER_PIECE: 'PER_PIECE',
+  PER_SET: 'PER_SET',
+  PER_KG_WEIGHT: 'PER_KG_WEIGHT',
+  OWF_PERCENT: 'OWF_PERCENT',
+  PER_CARTON: 'PER_CARTON',
+  FIXED_ORDER_TOTAL: 'FIXED_ORDER_TOTAL'
+} as const
+
+export type ChargingCriteria = (typeof ChargingCriteria)[keyof typeof ChargingCriteria]

@@ -59,7 +59,9 @@ export const ModelName = {
   TimeActionPlan: 'TimeActionPlan',
   TimeActionStage: 'TimeActionStage',
   Broker: 'Broker',
-  BrokerThirdPartyRecord: 'BrokerThirdPartyRecord'
+  BrokerThirdPartyRecord: 'BrokerThirdPartyRecord',
+  OrderBom: 'OrderBom',
+  OrderBomItem: 'OrderBomItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -218,12 +220,74 @@ export const BrokerThirdPartyRecordScalarFieldEnum = {
 export type BrokerThirdPartyRecordScalarFieldEnum = (typeof BrokerThirdPartyRecordScalarFieldEnum)[keyof typeof BrokerThirdPartyRecordScalarFieldEnum]
 
 
+export const OrderBomScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  atxScIon: 'atxScIon',
+  skuId: 'skuId',
+  version: 'version',
+  status: 'status',
+  revisionReason: 'revisionReason',
+  createdById: 'createdById',
+  approvedById: 'approvedById',
+  approvedAt: 'approvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderBomScalarFieldEnum = (typeof OrderBomScalarFieldEnum)[keyof typeof OrderBomScalarFieldEnum]
+
+
+export const OrderBomItemScalarFieldEnum = {
+  id: 'id',
+  bomId: 'bomId',
+  category: 'category',
+  componentRole: 'componentRole',
+  materialCode: 'materialCode',
+  materialName: 'materialName',
+  specification: 'specification',
+  stageCode: 'stageCode',
+  applicableShade: 'applicableShade',
+  applicableSize: 'applicableSize',
+  chargingCriteria: 'chargingCriteria',
+  uom: 'uom',
+  baseQuantity: 'baseQuantity',
+  consumptionRate: 'consumptionRate',
+  allowancePercent: 'allowancePercent',
+  purchaseUom: 'purchaseUom',
+  conversionFactor: 'conversionFactor',
+  estimatedRequiredQty: 'estimatedRequiredQty',
+  actualFirstBatchRate: 'actualFirstBatchRate',
+  actualConsumedQty: 'actualConsumedQty',
+  procuredQty: 'procuredQty',
+  usableStockQty: 'usableStockQty',
+  ecsLineItemId: 'ecsLineItemId',
+  ecsFrozenUnitRate: 'ecsFrozenUnitRate',
+  totalBudgetedCost: 'totalBudgetedCost',
+  extraAttributes: 'extraAttributes',
+  isActive: 'isActive',
+  remarks: 'remarks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderBomItemScalarFieldEnum = (typeof OrderBomItemScalarFieldEnum)[keyof typeof OrderBomItemScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -240,4 +304,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

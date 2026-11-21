@@ -62,3 +62,13 @@ export type Broker = Prisma.BrokerModel
  * 
  */
 export type BrokerThirdPartyRecord = Prisma.BrokerThirdPartyRecordModel
+/**
+ * Model OrderBom
+ * 
+ */
+export type OrderBom = Prisma.OrderBomModel
+/**
+ * Model OrderBomItem
+ * 
+ */
+export type OrderBomItem = Prisma.OrderBomItemModel

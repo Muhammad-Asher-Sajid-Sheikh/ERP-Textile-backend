@@ -392,7 +392,9 @@ export const ModelName = {
   TimeActionPlan: 'TimeActionPlan',
   TimeActionStage: 'TimeActionStage',
   Broker: 'Broker',
-  BrokerThirdPartyRecord: 'BrokerThirdPartyRecord'
+  BrokerThirdPartyRecord: 'BrokerThirdPartyRecord',
+  OrderBom: 'OrderBom',
+  OrderBomItem: 'OrderBomItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -408,7 +410,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "refreshToken" | "auditLog" | "orderToken" | "preProductionSample" | "timeActionPlan" | "timeActionStage" | "broker" | "brokerThirdPartyRecord"
+    modelProps: "user" | "refreshToken" | "auditLog" | "orderToken" | "preProductionSample" | "timeActionPlan" | "timeActionStage" | "broker" | "brokerThirdPartyRecord" | "orderBom" | "orderBomItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1078,6 +1080,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OrderBom: {
+      payload: Prisma.$OrderBomPayload<ExtArgs>
+      fields: Prisma.OrderBomFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderBomFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderBomFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>
+        }
+        findFirst: {
+          args: Prisma.OrderBomFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderBomFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>
+        }
+        findMany: {
+          args: Prisma.OrderBomFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>[]
+        }
+        create: {
+          args: Prisma.OrderBomCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>
+        }
+        createMany: {
+          args: Prisma.OrderBomCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderBomCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>[]
+        }
+        delete: {
+          args: Prisma.OrderBomDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>
+        }
+        update: {
+          args: Prisma.OrderBomUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderBomDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderBomUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderBomUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderBomUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomPayload>
+        }
+        aggregate: {
+          args: Prisma.OrderBomAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderBom>
+        }
+        groupBy: {
+          args: Prisma.OrderBomGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderBomGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderBomCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderBomCountAggregateOutputType> | number
+        }
+      }
+    }
+    OrderBomItem: {
+      payload: Prisma.$OrderBomItemPayload<ExtArgs>
+      fields: Prisma.OrderBomItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderBomItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderBomItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>
+        }
+        findFirst: {
+          args: Prisma.OrderBomItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderBomItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>
+        }
+        findMany: {
+          args: Prisma.OrderBomItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>[]
+        }
+        create: {
+          args: Prisma.OrderBomItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>
+        }
+        createMany: {
+          args: Prisma.OrderBomItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderBomItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>[]
+        }
+        delete: {
+          args: Prisma.OrderBomItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>
+        }
+        update: {
+          args: Prisma.OrderBomItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderBomItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderBomItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderBomItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderBomItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderBomItemPayload>
+        }
+        aggregate: {
+          args: Prisma.OrderBomItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderBomItem>
+        }
+        groupBy: {
+          args: Prisma.OrderBomItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderBomItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderBomItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderBomItemCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1257,12 +1407,74 @@ export const BrokerThirdPartyRecordScalarFieldEnum = {
 export type BrokerThirdPartyRecordScalarFieldEnum = (typeof BrokerThirdPartyRecordScalarFieldEnum)[keyof typeof BrokerThirdPartyRecordScalarFieldEnum]
 
 
+export const OrderBomScalarFieldEnum = {
+  id: 'id',
+  icnNo: 'icnNo',
+  atxScIon: 'atxScIon',
+  skuId: 'skuId',
+  version: 'version',
+  status: 'status',
+  revisionReason: 'revisionReason',
+  createdById: 'createdById',
+  approvedById: 'approvedById',
+  approvedAt: 'approvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderBomScalarFieldEnum = (typeof OrderBomScalarFieldEnum)[keyof typeof OrderBomScalarFieldEnum]
+
+
+export const OrderBomItemScalarFieldEnum = {
+  id: 'id',
+  bomId: 'bomId',
+  category: 'category',
+  componentRole: 'componentRole',
+  materialCode: 'materialCode',
+  materialName: 'materialName',
+  specification: 'specification',
+  stageCode: 'stageCode',
+  applicableShade: 'applicableShade',
+  applicableSize: 'applicableSize',
+  chargingCriteria: 'chargingCriteria',
+  uom: 'uom',
+  baseQuantity: 'baseQuantity',
+  consumptionRate: 'consumptionRate',
+  allowancePercent: 'allowancePercent',
+  purchaseUom: 'purchaseUom',
+  conversionFactor: 'conversionFactor',
+  estimatedRequiredQty: 'estimatedRequiredQty',
+  actualFirstBatchRate: 'actualFirstBatchRate',
+  actualConsumedQty: 'actualConsumedQty',
+  procuredQty: 'procuredQty',
+  usableStockQty: 'usableStockQty',
+  ecsLineItemId: 'ecsLineItemId',
+  ecsFrozenUnitRate: 'ecsFrozenUnitRate',
+  totalBudgetedCost: 'totalBudgetedCost',
+  extraAttributes: 'extraAttributes',
+  isActive: 'isActive',
+  remarks: 'remarks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderBomItemScalarFieldEnum = (typeof OrderBomItemScalarFieldEnum)[keyof typeof OrderBomItemScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1279,6 +1491,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -1475,6 +1696,76 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
+
+/**
+ * Reference to a field of type 'BomStatus'
+ */
+export type EnumBomStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BomStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'BomStatus[]'
+ */
+export type ListEnumBomStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BomStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BomCategory'
+ */
+export type EnumBomCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BomCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'BomCategory[]'
+ */
+export type ListEnumBomCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BomCategory[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ChargingCriteria'
+ */
+export type EnumChargingCriteriaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChargingCriteria'>
+    
+
+
+/**
+ * Reference to a field of type 'ChargingCriteria[]'
+ */
+export type ListEnumChargingCriteriaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChargingCriteria[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Decimal'
+ */
+export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+/**
+ * Reference to a field of type 'Decimal[]'
+ */
+export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -1594,6 +1885,8 @@ export type GlobalOmitConfig = {
   timeActionStage?: Prisma.TimeActionStageOmit
   broker?: Prisma.BrokerOmit
   brokerThirdPartyRecord?: Prisma.BrokerThirdPartyRecordOmit
+  orderBom?: Prisma.OrderBomOmit
+  orderBomItem?: Prisma.OrderBomItemOmit
 }
 
 /* Types for Logging */
