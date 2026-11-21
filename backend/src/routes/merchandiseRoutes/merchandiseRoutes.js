@@ -9,7 +9,16 @@ import {
     createTimeActionPlan, 
     upsertTimeActionStages,
     updateTimeActionPlan,
-    updateTimeActionStages
+    updateTimeActionStages,
+
+    createBroker,
+    createBrokerRecord,
+    getAllBrokers,
+    getBrokerRecordsByIcn,
+    updateBroker,
+    updateBrokerRecord,
+    deleteBroker,
+    deleteBrokerRecord
 } from '../../controller/Merchandise/merchandiseController.js';
 
 const router = express.Router();

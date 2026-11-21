@@ -14,6 +14,8 @@ import authRoutes from './routes/auth.js';
 import merchandiseRoutes from './routes/merchandiseRoutes/merchandiseRoutes.js';
 import bomRoutes from './routes/merchandiseRoutes/BOMRoutes.js';
 import bomItemRoutes from './routes/merchandiseRoutes/BOMItemRoutes.js';
+import owiRoutes from './routes/merchandiseRoutes/owiRoutes.js';
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -72,6 +74,9 @@ app.use('/api/merchandise', merchandiseRoutes);
 app.use('/api/bom', bomRoutes);
 // BOM Item routes
 app.use('/api/bom-items', bomItemRoutes);
+// OWI routes
+app.use('/api/owi', owiRoutes);
+
 
 // ================================================================
 // PROTECTED ROUTES (Authentication + Approval required)

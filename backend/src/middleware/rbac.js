@@ -60,3 +60,21 @@ export const requireManagement = (req, res, next) => {
  * @returns {Function} Express middleware
  */
 export const isManagementAndApproved = [checkApproved, requireRole('MANAGEMENT')];
+
+// export default function getAuditContext(req) {
+//   const user = req.user || TestUser;
+//   if (!user || !user.id) {
+//     throw new Error('UNAUTHORIZED');
+//   }
+
+//   const ipAddress =
+//     (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',')[0].trim()) ||
+//     req.socket?.remoteAddress ||
+//     null;
+
+//   return {
+//     userId: user.id,
+//     performedBy: user.email || user.name || user.id,
+//     ipAddress,
+//   };
+// }
