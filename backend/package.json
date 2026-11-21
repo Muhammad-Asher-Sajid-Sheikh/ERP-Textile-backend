@@ -7,6 +7,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "tsx src/app.js",
+    "dev": "nodemon --watch src --ext js,ts,json --exec tsx src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {

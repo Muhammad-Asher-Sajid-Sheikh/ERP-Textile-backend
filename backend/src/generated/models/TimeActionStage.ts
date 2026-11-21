@@ -232,6 +232,7 @@ export type TimeActionStageOrderByWithRelationInput = {
 
 export type TimeActionStageWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  timeActionPlanId_stageName?: Prisma.TimeActionStageTimeActionPlanIdStageNameCompoundUniqueInput
   AND?: Prisma.TimeActionStageWhereInput | Prisma.TimeActionStageWhereInput[]
   OR?: Prisma.TimeActionStageWhereInput[]
   NOT?: Prisma.TimeActionStageWhereInput | Prisma.TimeActionStageWhereInput[]
@@ -244,7 +245,7 @@ export type TimeActionStageWhereUniqueInput = Prisma.AtLeast<{
   responsibleDepartment?: Prisma.EnumDepartmentNullableFilter<"TimeActionStage"> | $Enums.Department | null
   status?: Prisma.EnumStageStatusFilter<"TimeActionStage"> | $Enums.StageStatus
   timeActionPlan?: Prisma.XOR<Prisma.TimeActionPlanScalarRelationFilter, Prisma.TimeActionPlanWhereInput>
-}, "id">
+}, "id" | "timeActionPlanId_stageName">
 
 export type TimeActionStageOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -367,6 +368,11 @@ export type TimeActionStageListRelationFilter = {
 
 export type TimeActionStageOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type TimeActionStageTimeActionPlanIdStageNameCompoundUniqueInput = {
+  timeActionPlanId: string
+  stageName: string
 }
 
 export type TimeActionStageCountOrderByAggregateInput = {

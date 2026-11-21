@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '../generated/client.js';
+import { PrismaClient } from '../generated/client.ts';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
 

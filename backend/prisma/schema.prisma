@@ -134,7 +134,7 @@ model PreProductionSample {
   
   // Relational Link to OWI
   owiId           String
-  owi             String  //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
+  owi             String?  //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
 
   rackId          String               // Storage rack reference (e.g., "1", "R-02")
   qcStatus        InternalQcStatus     @default(PENDING)
@@ -178,7 +178,7 @@ model TimeActionPlan {
   id                 String           @id @default(uuid())
   icnNo              String
   owiId              String
-  owi                String           //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
+  owi                String?           //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
   
   orderDate          DateTime
   shipmentDeadline   DateTime
@@ -215,10 +215,12 @@ model TimeActionStage {
   responsibleDepartment Department?     
   status                StageStatus    @default(PENDING)
 
+  @@unique([timeActionPlanId, stageName])
   @@index([timeActionPlanId])
   @@index([status])
   @@index([responsibleDepartment])
   @@map("time_action_stages")
+
 }
 
 

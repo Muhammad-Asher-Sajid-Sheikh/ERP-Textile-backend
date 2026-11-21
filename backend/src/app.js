@@ -11,6 +11,7 @@ import { checkApproved } from './middleware/rbac.js';
 
 //Routes
 import authRoutes from './routes/auth.js';
+import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,6 +75,9 @@ app.use(checktoken);
 // Apply approval check to ensure only approved users can access
 app.use(checkApproved);
 
+
+// Merchandise routes
+app.use('/api/merchandise', merchandiseRoutes);
 // Example protected routes (add your business logic routes here)
 // app.use('/api/fabrics', fabricRoutes);
 // app.use('/api/production', productionRoutes);

@@ -1,12 +1,191 @@
-import { PrismaClient } from '../generated/client.js';
+import { PrismaClient } from '../generated/client.ts';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
 
 const prisma = new PrismaClient({
-    adapter: new PrismaPg({
-        connectionString: process.env.DATABASE_URL,
-    }),
+  adapter: new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+  }),
 });
+
+// Prisma enum values
+const SAMPLE_TYPES = [
+  'APPROVAL_SAMPLE',
+  'PHOTO_SAMPLE',
+  'PPS',
+  'PACKING_SAMPLE',
+];
+
+const QC_STATUSES = ['PENDING', 'PASSED', 'FAILED'];
+
+const CUSTOMER_STATUSES = [
+  'PENDING',
+  'APPROVED',
+  'DISAPPROVED',
+];
+
+const FINAL_CUSTOMER_STATUSES = ['APPROVED', 'DISAPPROVED'];
+
+const REASON_CATEGORIES = [
+  'SHADE_MISMATCH',
+  'MEASUREMENT_DEFECT',
+  'CONSTRUCTION_ERROR',
+  'FABRIC_QUALITY',
+  'TRIM_PACKING_DEFECT',
+  'OTHER',
+];
+
+const STAGE_STATUSES = [
+  'PENDING',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'DELAYED',
+];
+
+const DEPARTMENTS = [
+  'MERCHANDISING',
+  'SCM',
+  'PRODUCTION',
+  'QUALITY',
+  'ACCOUNTS',
+];
+
+// Helper functions
+const has = (obj, key) =>
+  Object.prototype.hasOwnProperty.call(obj, key);
+
+const isValidEnum = (value, values) =>
+  values.includes(value);
+
+function badRequest(res, message) {
+  return res.status(400).json({
+    success: false,
+    message,
+  });
+}
+
+function serverError(res, message, error) {
+  console.error(message, error);
+
+  return res.status(500).json({
+    success: false,
+    message,
+  });
+}
+
+function parseDate(value, fieldName, { nullable = true } = {}) {
+  if (value === null || value === '') {
+    if (nullable) {
+      return { value: null };
+    }
+
+    return {
+      error: `${fieldName} is required.`,
+    };
+  }
+
+  if (value === undefined) {
+    return { value: undefined };
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return {
+      error: `${fieldName} must be a valid date.`,
+    };
+  }
+
+  return { value: date };
+}
+
+function validateDatePair(start, end, startName, endName) {
+  if (start && end && end < start) {
+    return `${endName} cannot be earlier than ${startName}.`;
+  }
+
+  return null;
+}
+
+function leadTimeDays(start, end) {
+  return Math.ceil(
+    (end.getTime() - start.getTime()) / 86400000
+  );
+}
+
+// Validates and prepares stage data
+function stagePayload(stage) {
+  const data = {};
+
+  const dateFields = [
+    'plannedStartDate',
+    'plannedEndDate',
+    'actualStartDate',
+    'actualEndDate',
+  ];
+
+  for (const field of dateFields) {
+    if (has(stage, field)) {
+      const parsed = parseDate(stage[field], field);
+
+      if (parsed.error) {
+        return { error: parsed.error };
+      }
+
+      data[field] = parsed.value;
+    }
+  }
+
+  if (has(stage, 'responsibleDepartment')) {
+    if (
+      stage.responsibleDepartment !== null &&
+      !isValidEnum(stage.responsibleDepartment, DEPARTMENTS)
+    ) {
+      return {
+        error: 'responsibleDepartment is not a valid Department value.',
+      };
+    }
+
+    data.responsibleDepartment = stage.responsibleDepartment;
+  }
+
+  if (has(stage, 'status')) {
+    if (!isValidEnum(stage.status, STAGE_STATUSES)) {
+      return {
+        error: 'status is not a valid StageStatus value.',
+      };
+    }
+
+    data.status = stage.status;
+  }
+
+  const plannedError = validateDatePair(
+    data.plannedStartDate,
+    data.plannedEndDate,
+    'plannedStartDate',
+    'plannedEndDate'
+  );
+
+  const actualError = validateDatePair(
+    data.actualStartDate,
+    data.actualEndDate,
+    'actualStartDate',
+    'actualEndDate'
+  );
+
+  if (plannedError || actualError) {
+    return {
+      error: plannedError || actualError,
+    };
+  }
+
+  return { data };
+}
+
+// ======================================================
+// 1. CREATE PPS RECORD
+// POST /api/merchandise/pps
+// ======================================================
 
 export const createPpsRecord = async (req, res) => {
   try {
@@ -14,64 +193,81 @@ export const createPpsRecord = async (req, res) => {
       icnNo,
       sampleType,
       owiId,
+      owi,
       rackId,
       qcStatus,
-      dispatchDate
+      dispatchDate,
     } = req.body;
 
-    // Validate required fields from request body
     if (!icnNo || !sampleType || !owiId || !rackId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields: icnNo, sampleType, owiId, and rackId are mandatory.'
-      });
+      return badRequest(
+        res,
+        'Missing required fields: icnNo, sampleType, owiId, and rackId are mandatory.'
+      );
     }
 
-    // Find the latest PPS record for this icnNo to determine the current version
-    const latestPps = await prisma.preProductionSample.findFirst({
-      where: { icnNo },
-      orderBy: { ppsVersion: 'desc' },
-      select: { ppsVersion: true }
-    });
+    if (!isValidEnum(sampleType, SAMPLE_TYPES)) {
+      return badRequest(res, 'sampleType is invalid.');
+    }
 
-    // Calculate the next version number
-    const nextPpsVersion = latestPps ? latestPps.ppsVersion + 1 : 1;
+    if (
+      qcStatus !== undefined &&
+      !isValidEnum(qcStatus, QC_STATUSES)
+    ) {
+      return badRequest(res, 'qcStatus is invalid.');
+    }
 
-    // Create new PPS record with system defaults for excluded fields
-    const newPpsRecord = await prisma.preProductionSample.create({
-      data: {
-        icnNo,
-        sampleType,
-        owiId,
-        rackId,
-        qcStatus: qcStatus || 'PENDING',
-        dispatchDate: dispatchDate ? new Date(dispatchDate) : null,
-        ppsVersion: nextPpsVersion
-        // isApproved defaults to false
-        // status defaults to PENDING
-        // reasonCategory, remarks, receivedDate left null
-      }
+    const parsedDispatch = parseDate(
+      dispatchDate,
+      'dispatchDate'
+    );
+
+    if (parsedDispatch.error) {
+      return badRequest(res, parsedDispatch.error);
+    }
+
+    const record = await prisma.$transaction(async (tx) => {
+      const latest = await tx.preProductionSample.findFirst({
+        where: { icnNo },
+        orderBy: { ppsVersion: 'desc' },
+        select: { ppsVersion: true },
+      });
+
+      const version = (latest?.ppsVersion ?? 0) + 1;
+
+      return tx.preProductionSample.create({
+        data: {
+          icnNo,
+          sampleType,
+          owiId,
+          owi: owi ?? null,
+          rackId,
+          qcStatus: qcStatus ?? 'PENDING',
+          dispatchDate: parsedDispatch.value ?? null,
+          ppsVersion: version,
+        },
+      });
     });
 
     return res.status(201).json({
       success: true,
-      message: `PPS Record version ${nextPpsVersion} created successfully.`,
-      data: newPpsRecord
+      message: `PPS Record version ${record.ppsVersion} created successfully.`,
+      data: record,
     });
   } catch (error) {
-    console.error('Error creating PPS record:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while creating PPS record.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while creating PPS record.',
+      error
+    );
   }
 };
 
-/**
- * Get a lightweight list of all PPS records.
- * Selects essential summary fields for high-level dashboard views.
- */
+// ======================================================
+// 2. GET ALL PPS RECORDS
+// GET /api/merchandise/pps
+// ======================================================
+
 export const getAllPPS = async (req, res) => {
   try {
     const ppsList = await prisma.preProductionSample.findMany({
@@ -81,451 +277,827 @@ export const getAllPPS = async (req, res) => {
         sampleType: true,
         ppsVersion: true,
         owiId: true,
+        owi: true,
         rackId: true,
         qcStatus: true,
         isApproved: true,
         status: true,
+        isLocked: true,
         dispatchDate: true,
-        createdAt: true
+        createdAt: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     return res.status(200).json({
       success: true,
       count: ppsList.length,
-      data: ppsList
+      data: ppsList,
     });
   } catch (error) {
-    console.error('Error fetching PPS list:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while fetching PPS list.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while fetching PPS list.',
+      error
+    );
   }
 };
 
-/**
- * Get complete details of a single PPS record by ID,
- * including related OWI technical context.
- */
+// ======================================================
+// 3. GET PPS RECORD BY ID
+// GET /api/merchandise/pps/:id
+// ======================================================
+
 export const getPPSById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const ppsRecord = await prisma.preProductionSample.findUnique({
+    const record = await prisma.preProductionSample.findUnique({
       where: { id },
-      include: {
-        owi: true // Includes full related OWI document details
-      }
     });
 
-    if (!ppsRecord) {
+    if (!record) {
       return res.status(404).json({
         success: false,
-        message: `PPS record with ID ${id} not found.`
+        message: `PPS record with ID ${id} not found.`,
       });
     }
 
     return res.status(200).json({
       success: true,
-      data: ppsRecord
+      data: record,
     });
   } catch (error) {
-    console.error('Error fetching PPS details:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while fetching PPS details.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while fetching PPS details.',
+      error
+    );
   }
 };
 
-/**
- * Update general fields of an unlocked PPS record.
- * Rejects updates if the record is already locked.
- */
+// ======================================================
+// 4. UPDATE PPS RECORD
+// PUT /api/merchandise/pps/:id
+// ======================================================
+
 export const updatePpsRecord = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const body = req.body;
 
-    // Check if the record exists and is locked
-    const existingPps = await prisma.preProductionSample.findUnique({
-      where: { id }
+    const existing = await prisma.preProductionSample.findUnique({
+      where: { id },
     });
 
-    if (!existingPps) {
+    if (!existing) {
       return res.status(404).json({
         success: false,
-        message: `PPS record with ID ${id} not found.`
+        message: `PPS record with ID ${id} not found.`,
       });
     }
 
-    if (existingPps.isLocked) {
-      return res.status(400).json({
-        success: false,
-        message: 'This PPS record is locked and cannot be modified.'
-      });
+    if (existing.isLocked) {
+      return badRequest(
+        res,
+        'This PPS record is locked and cannot be modified.'
+      );
     }
 
-    // Update the record with provided payload
-    const updatedPps = await prisma.preProductionSample.update({
-      where: { id },
-      data: {
-        ...updateData,
-        // Ensure date field is converted properly if provided
-        ...(updateData.dispatchDate && { dispatchDate: new Date(updateData.dispatchDate) }),
-        ...(updateData.receivedDate && { receivedDate: new Date(updateData.receivedDate) })
+    const data = {};
+
+    // Only allow explicitly editable fields
+    const stringFields = [
+      'icnNo',
+      'owiId',
+      'owi',
+      'rackId',
+      'remarks',
+    ];
+
+    for (const field of stringFields) {
+      if (has(body, field)) {
+        data[field] = body[field];
       }
+    }
+
+    if (has(body, 'sampleType')) {
+      if (!isValidEnum(body.sampleType, SAMPLE_TYPES)) {
+        return badRequest(res, 'sampleType is invalid.');
+      }
+
+      data.sampleType = body.sampleType;
+    }
+
+    if (has(body, 'qcStatus')) {
+      if (!isValidEnum(body.qcStatus, QC_STATUSES)) {
+        return badRequest(res, 'qcStatus is invalid.');
+      }
+
+      data.qcStatus = body.qcStatus;
+    }
+
+    const dateFields = [
+      'dispatchDate',
+      'receivedDate',
+    ];
+
+    for (const field of dateFields) {
+      if (has(body, field)) {
+        const parsed = parseDate(body[field], field);
+
+        if (parsed.error) {
+          return badRequest(res, parsed.error);
+        }
+
+        data[field] = parsed.value;
+      }
+    }
+
+    if (Object.keys(data).length === 0) {
+      return badRequest(
+        res,
+        'No editable PPS fields were supplied.'
+      );
+    }
+
+    const result = await prisma.preProductionSample.updateMany({
+      where: {
+        id,
+        isLocked: false,
+      },
+      data,
+    });
+
+    if (result.count === 0) {
+      return badRequest(
+        res,
+        'This PPS record is locked and cannot be modified.'
+      );
+    }
+
+    const updated = await prisma.preProductionSample.findUnique({
+      where: { id },
     });
 
     return res.status(200).json({
       success: true,
       message: 'PPS record updated successfully.',
-      data: updatedPps
+      data: updated,
     });
   } catch (error) {
-    console.error('Error updating PPS record:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while updating PPS record.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while updating PPS record.',
+      error
+    );
   }
 };
 
-/**
- * Mark PPS as complete/reviewed by Marketing.
- * Updates customer feedback fields (status, reasonCategory, remarks, receivedDate)
- * and sets `isLocked: true` to freeze the record.
- */
+// ======================================================
+// 5. MARK PPS AS DONE
+// PATCH /api/merchandise/pps/:id/mark-done
+// ======================================================
+
 export const markPPSAsDone = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, reasonCategory, remarks, receivedDate } = req.body;
 
-    // Validate required fields
-    if (!status) {
-      return res.status(400).json({
-        success: false,
-        message: 'Customer feedback status (APPROVED / DISAPPROVED) is mandatory.'
-      });
+    const {
+      status,
+      reasonCategory,
+      remarks,
+      receivedDate,
+    } = req.body;
+
+    if (!isValidEnum(status, FINAL_CUSTOMER_STATUSES)) {
+      return badRequest(
+        res,
+        'status must be APPROVED or DISAPPROVED.'
+      );
     }
 
-    // Check existing record
-    const existingPps = await prisma.preProductionSample.findUnique({
-      where: { id }
-    });
-
-    if (!existingPps) {
-      return res.status(404).json({
-        success: false,
-        message: `PPS record with ID ${id} not found.`
-      });
+    if (
+      status === 'DISAPPROVED' &&
+      !reasonCategory
+    ) {
+      return badRequest(
+        res,
+        'reasonCategory is required when status is DISAPPROVED.'
+      );
     }
 
-    if (existingPps.isLocked) {
-      return res.status(400).json({
-        success: false,
-        message: 'This PPS record is already locked.'
-      });
+    if (
+      reasonCategory &&
+      !isValidEnum(reasonCategory, REASON_CATEGORIES)
+    ) {
+      return badRequest(
+        res,
+        'reasonCategory is invalid.'
+      );
     }
 
-    // Update feedback and lock the record
-    const lockedPps = await prisma.preProductionSample.update({
-      where: { id },
+    const parsedReceived = parseDate(
+      receivedDate,
+      'receivedDate'
+    );
+
+    if (parsedReceived.error) {
+      return badRequest(res, parsedReceived.error);
+    }
+
+    const update = await prisma.preProductionSample.updateMany({
+      where: {
+        id,
+        isLocked: false,
+      },
       data: {
         status,
-        reasonCategory: status === 'DISAPPROVED' ? reasonCategory : null,
-        remarks,
-        receivedDate: receivedDate ? new Date(receivedDate) : new Date(),
-        isLocked: true
+        reasonCategory:
+          status === 'DISAPPROVED'
+            ? reasonCategory
+            : null,
+        remarks: remarks ?? null,
+        receivedDate: parsedReceived.value ?? new Date(),
+        isLocked: true,
+      },
+    });
+
+    if (update.count === 0) {
+      const existing = await prisma.preProductionSample.findUnique({
+        where: { id },
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          message: `PPS record with ID ${id} not found.`,
+        });
       }
+
+      return badRequest(
+        res,
+        'This PPS record is already locked.'
+      );
+    }
+
+    const locked = await prisma.preProductionSample.findUnique({
+      where: { id },
     });
 
     return res.status(200).json({
       success: true,
       message: `PPS record marked as ${status} and locked successfully.`,
-      data: lockedPps
+      data: locked,
     });
   } catch (error) {
-    console.error('Error locking PPS record:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while marking PPS as done.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while marking PPS as done.',
+      error
+    );
   }
 };
 
 
-/**
- * 1. Create a Time & Action Plan header.
- * Automatically calculates totalLeadTimeDays from orderDate and shipmentDeadline.
- */
+
+// GET ALL TIME & ACTION PLANS
+// GET /api/merchandise/ta-plan
+
+export const getAllTimeActionPlans = async (req, res) => {
+    try {
+        const plans = await prisma.timeActionPlan.findMany({
+            include: {
+                stages: true,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        return res.status(200).json({
+            success: true,
+            count: plans.length,
+            data: plans,
+        });
+    } catch (error) {
+        return serverError(
+            res,
+            "Internal server error while fetching T&A plans.",
+            error
+        );
+    }
+};
+
+// ======================================================
+// 6. CREATE TIME & ACTION PLAN
+// POST /api/merchandise/ta-plan
+// ======================================================
+
 export const createTimeActionPlan = async (req, res) => {
   try {
-    const { icnNo, owiId, orderDate, shipmentDeadline, taVersion } = req.body;
+    const {
+      icnNo,
+      owiId,
+      owi,
+      orderDate,
+      shipmentDeadline,
+    } = req.body;
 
-    if (!icnNo || !owiId || !orderDate || !shipmentDeadline) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing mandatory fields: icnNo, owiId, orderDate, and shipmentDeadline are required.'
-      });
+    if (
+      !icnNo ||
+      !owiId ||
+      !orderDate ||
+      !shipmentDeadline
+    ) {
+      return badRequest(
+        res,
+        'Missing mandatory fields: icnNo, owiId, orderDate, and shipmentDeadline are required.'
+      );
     }
 
-    const start = new Date(orderDate);
-    const end = new Date(shipmentDeadline);
+    const startParsed = parseDate(
+      orderDate,
+      'orderDate',
+      { nullable: false }
+    );
 
-    // Calculate total lead time in days
-    const diffTime = Math.abs(end - start);
-    const totalLeadTimeDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const endParsed = parseDate(
+      shipmentDeadline,
+      'shipmentDeadline',
+      { nullable: false }
+    );
 
-    const newTaPlan = await prisma.timeActionPlan.create({
+    if (startParsed.error || endParsed.error) {
+      return badRequest(
+        res,
+        startParsed.error || endParsed.error
+      );
+    }
+
+    const dateError = validateDatePair(
+      startParsed.value,
+      endParsed.value,
+      'orderDate',
+      'shipmentDeadline'
+    );
+
+    if (dateError) {
+      return badRequest(res, dateError);
+    }
+
+    const plan = await prisma.timeActionPlan.create({
       data: {
         icnNo,
         owiId,
-        orderDate: start,
-        shipmentDeadline: end,
-        totalLeadTimeDays,
-        taVersion: taVersion || 1
-      }
+        owi: owi ?? null,
+        orderDate: startParsed.value,
+        shipmentDeadline: endParsed.value,
+        totalLeadTimeDays: leadTimeDays(
+          startParsed.value,
+          endParsed.value
+        ),
+      },
+      include: {
+        stages: true,
+      },
     });
 
     return res.status(201).json({
       success: true,
       message: 'Time & Action Plan created successfully.',
-      data: newTaPlan
+      data: plan,
     });
   } catch (error) {
-    console.error('Error creating T&A plan:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while creating T&A plan.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while creating T&A plan.',
+      error
+    );
   }
 };
 
-/**
- * 2. Upsert all stages for a given Time & Action Plan.
- * Expects an array of stages in the request body. If an ID is provided, it updates; otherwise, it creates.
- */
+// ======================================================
+// 7. UPSERT TIME ACTION STAGES
+// POST /api/merchandise/ta-plan/:timeActionPlanId/stages
+// ======================================================
+
 export const upsertTimeActionStages = async (req, res) => {
   try {
     const { timeActionPlanId } = req.params;
-    const { stages } = req.body; // Expects an array of stage objects
+    const { stages } = req.body;
 
     if (!Array.isArray(stages) || stages.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'A valid array of stages is required.'
+      return badRequest(
+        res,
+        'A non-empty stages array is required.'
+      );
+    }
+
+    if (
+      stages.some(
+        (stage) =>
+          !stage ||
+          typeof stage.stageName !== 'string' ||
+          !stage.stageName.trim()
+      )
+    ) {
+      return badRequest(
+        res,
+        'Every stage must include a non-empty stageName.'
+      );
+    }
+
+    const names = stages.map((stage) =>
+      stage.stageName.trim()
+    );
+
+    if (new Set(names).size !== names.length) {
+      return badRequest(
+        res,
+        'Duplicate stageName values are not allowed in one request.'
+      );
+    }
+
+    // Validate every stage before performing database writes.
+    const preparedStages = [];
+
+    for (const stage of stages) {
+      const payload = stagePayload(stage);
+
+      if (payload.error) {
+        return badRequest(res, payload.error);
+      }
+
+      preparedStages.push({
+        ...stage,
+        stageName: stage.stageName.trim(),
+        data: payload.data,
       });
     }
 
-    // Verify the T&A plan exists and is not locked
-    const taPlan = await prisma.timeActionPlan.findUnique({
-      where: { id: timeActionPlanId }
+    const result = await prisma.$transaction(async (tx) => {
+      const plan = await tx.timeActionPlan.findUnique({
+        where: { id: timeActionPlanId },
+      });
+
+      if (!plan) {
+        return { error: 'NOT_FOUND' };
+      }
+
+      if (plan.isLocked) {
+        return { error: 'LOCKED' };
+      }
+
+      const output = [];
+
+      for (const stage of preparedStages) {
+        if (stage.id) {
+          const existing = await tx.timeActionStage.findUnique({
+            where: { id: stage.id },
+          });
+
+          if (
+            !existing ||
+            existing.timeActionPlanId !== timeActionPlanId
+          ) {
+            return {
+              error: `Stage ID ${stage.id} does not belong to this plan.`,
+            };
+          }
+
+          const updated = await tx.timeActionStage.update({
+            where: { id: stage.id },
+            data: {
+              stageName: stage.stageName,
+              ...stage.data,
+            },
+          });
+
+          output.push(updated);
+        } else {
+          const createdOrUpdated = await tx.timeActionStage.upsert({
+            where: {
+              timeActionPlanId_stageName: {
+                timeActionPlanId,
+                stageName: stage.stageName,
+              },
+            },
+            update: stage.data,
+            create: {
+              timeActionPlanId,
+              stageName: stage.stageName,
+              ...stage.data,
+            },
+          });
+
+          output.push(createdOrUpdated);
+        }
+      }
+
+      return { data: output };
     });
 
-    if (!taPlan) {
+    if (result.error === 'NOT_FOUND') {
       return res.status(404).json({
         success: false,
-        message: `Time & Action Plan with ID ${timeActionPlanId} not found.`
+        message: `Time & Action Plan with ID ${timeActionPlanId} not found.`,
       });
     }
 
-    if (taPlan.isLocked) {
-      return res.status(400).json({
-        success: false,
-        message: 'This T&A Plan is locked. Stages cannot be modified.'
-      });
+    if (result.error === 'LOCKED') {
+      return badRequest(
+        res,
+        'This T&A Plan is locked. Stages cannot be modified.'
+      );
     }
 
-    // Execute upserts in a transaction to ensure atomic batch updates
-    const upsertOperations = stages.map((stage) => {
-      const stageId = stage.id || 'new-stage-placeholder';
-
-      return prisma.timeActionStage.upsert({
-        where: { id: stageId },
-        update: {
-          stageName: stage.stageName,
-          plannedStartDate: stage.plannedStartDate ? new Date(stage.plannedStartDate) : null,
-          plannedEndDate: stage.plannedEndDate ? new Date(stage.plannedEndDate) : null,
-          actualStartDate: stage.actualStartDate ? new Date(stage.actualStartDate) : null,
-          actualEndDate: stage.actualEndDate ? new Date(stage.actualEndDate) : null,
-          responsibleDepartment: stage.responsibleDepartment || null,
-          status: stage.status || 'PENDING'
-        },
-        create: {
-          timeActionPlanId,
-          stageName: stage.stageName,
-          plannedStartDate: stage.plannedStartDate ? new Date(stage.plannedStartDate) : null,
-          plannedEndDate: stage.plannedEndDate ? new Date(stage.plannedEndDate) : null,
-          actualStartDate: stage.actualStartDate ? new Date(stage.actualStartDate) : null,
-          actualEndDate: stage.actualEndDate ? new Date(stage.actualEndDate) : null,
-          responsibleDepartment: stage.responsibleDepartment || null,
-          status: stage.status || 'PENDING'
-        }
-      });
-    });
-
-    const results = await prisma.$transaction(upsertOperations);
+    if (result.error) {
+      return badRequest(res, result.error);
+    }
 
     return res.status(200).json({
       success: true,
-      message: `${results.length} stages successfully processed (upserted).`,
-      data: results
+      message: `${result.data.length} stages successfully processed.`,
+      data: result.data,
     });
   } catch (error) {
-    console.error('Error upserting T&A stages:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while processing T&A stages.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while processing T&A stages.',
+      error
+    );
   }
 };
 
-/**
- * 3. Update the Time & Action Plan header.
- * Checks if the plan is locked (blocks edits if true) and increments taVersion.
- */
+// ======================================================
+// 8. UPDATE TIME & ACTION PLAN
+// PUT /api/merchandise/ta-plan/:id
+// ======================================================
+
 export const updateTimeActionPlan = async (req, res) => {
   try {
     const { id } = req.params;
-    const { orderDate, shipmentDeadline, criticalPathFlag } = req.body;
 
-    const existingPlan = await prisma.timeActionPlan.findUnique({
-      where: { id }
+    const {
+      orderDate,
+      shipmentDeadline,
+      criticalPathFlag,
+      owi,
+      owiId,
+      icnNo,
+    } = req.body;
+
+    const existing = await prisma.timeActionPlan.findUnique({
+      where: { id },
     });
 
-    if (!existingPlan) {
+    if (!existing) {
       return res.status(404).json({
         success: false,
-        message: `Time & Action Plan with ID ${id} not found.`
+        message: `Time & Action Plan with ID ${id} not found.`,
       });
     }
 
-    if (existingPlan.isLocked) {
-      return res.status(400).json({
-        success: false,
-        message: 'This T&A Plan is locked and cannot be edited.'
-      });
+    if (existing.isLocked) {
+      return badRequest(
+        res,
+        'This T&A Plan is locked and cannot be edited.'
+      );
     }
 
-    const start = orderDate ? new Date(orderDate) : existingPlan.orderDate;
-    const end = shipmentDeadline ? new Date(shipmentDeadline) : existingPlan.shipmentDeadline;
+    const startParsed = has(req.body, 'orderDate')
+      ? parseDate(orderDate, 'orderDate', { nullable: false })
+      : { value: existing.orderDate };
 
-    // Recalculate total lead time if dates change
-    const diffTime = Math.abs(end - start);
-    const totalLeadTimeDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const endParsed = has(req.body, 'shipmentDeadline')
+      ? parseDate(shipmentDeadline, 'shipmentDeadline', {
+          nullable: false,
+        })
+      : { value: existing.shipmentDeadline };
 
-    const updatedPlan = await prisma.timeActionPlan.update({
-      where: { id },
-      data: {
-        ...(orderDate && { orderDate: start }),
-        ...(shipmentDeadline && { shipmentDeadline: end }),
-        totalLeadTimeDays,
-        taVersion: existingPlan.taVersion + 1, // Increment version on update
-        ...(criticalPathFlag !== undefined && { criticalPathFlag })
+    if (startParsed.error || endParsed.error) {
+      return badRequest(
+        res,
+        startParsed.error || endParsed.error
+      );
+    }
+
+    const dateError = validateDatePair(
+      startParsed.value,
+      endParsed.value,
+      'orderDate',
+      'shipmentDeadline'
+    );
+
+    if (dateError) {
+      return badRequest(res, dateError);
+    }
+
+    const data = {
+      orderDate: startParsed.value,
+      shipmentDeadline: endParsed.value,
+      totalLeadTimeDays: leadTimeDays(
+        startParsed.value,
+        endParsed.value
+      ),
+      taVersion: {
+        increment: 1,
+      },
+    };
+
+    if (has(req.body, 'criticalPathFlag')) {
+      if (typeof criticalPathFlag !== 'boolean') {
+        return badRequest(
+          res,
+          'criticalPathFlag must be a boolean.'
+        );
       }
+
+      data.criticalPathFlag = criticalPathFlag;
+    }
+
+    if (has(req.body, 'owi')) {
+      data.owi = owi;
+    }
+
+    if (has(req.body, 'owiId')) {
+      data.owiId = owiId;
+    }
+
+    if (has(req.body, 'icnNo')) {
+      data.icnNo = icnNo;
+    }
+
+    const update = await prisma.timeActionPlan.updateMany({
+      where: {
+        id,
+        isLocked: false,
+      },
+      data,
+    });
+
+    if (update.count === 0) {
+      return badRequest(
+        res,
+        'This T&A Plan is locked and cannot be edited.'
+      );
+    }
+
+    const updated = await prisma.timeActionPlan.findUnique({
+      where: { id },
+      include: {
+        stages: true,
+      },
     });
 
     return res.status(200).json({
       success: true,
-      message: `T&A Plan updated successfully. Version incremented to v${updatedPlan.taVersion}.`,
-      data: updatedPlan
+      message: `T&A Plan updated successfully. Version incremented to v${updated.taVersion}.`,
+      data: updated,
     });
   } catch (error) {
-    console.error('Error updating T&A plan:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while updating T&A plan.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while updating T&A plan.',
+      error
+    );
   }
 };
 
-/**
- * 4. Update Time & Action Stages identified by stageName and timeActionPlanId.
- * Blocks updates if the parent plan is locked.
- */
+// ======================================================
+// 9. UPDATE TIME ACTION STAGES
+// PUT /api/merchandise/ta-plan/:timeActionPlanId/stages
+// ======================================================
+
 export const updateTimeActionStages = async (req, res) => {
   try {
     const { timeActionPlanId } = req.params;
-    const { stages } = req.body; // Expects an array of stage update objects containing stageName
+    const { stages } = req.body;
 
     if (!Array.isArray(stages) || stages.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'A valid array of stages with stageName is required.'
+      return badRequest(
+        res,
+        'A non-empty stages array is required.'
+      );
+    }
+
+    if (
+      stages.some(
+        (stage) =>
+          !stage ||
+          typeof stage.stageName !== 'string' ||
+          !stage.stageName.trim()
+      )
+    ) {
+      return badRequest(
+        res,
+        'Every stage update must include a non-empty stageName.'
+      );
+    }
+
+    const names = stages.map((stage) =>
+      stage.stageName.trim()
+    );
+
+    if (new Set(names).size !== names.length) {
+      return badRequest(
+        res,
+        'Duplicate stageName values are not allowed in one request.'
+      );
+    }
+
+    // Validate all stage updates before the transaction.
+    const preparedStages = [];
+
+    for (const stage of stages) {
+      const payload = stagePayload(stage);
+
+      if (payload.error) {
+        return badRequest(res, payload.error);
+      }
+
+      preparedStages.push({
+        stageName: stage.stageName.trim(),
+        data: payload.data,
       });
     }
 
-    // Verify parent plan and check lock status
-    const taPlan = await prisma.timeActionPlan.findUnique({
-      where: { id: timeActionPlanId }
+    const result = await prisma.$transaction(async (tx) => {
+      const plan = await tx.timeActionPlan.findUnique({
+        where: { id: timeActionPlanId },
+      });
+
+      if (!plan) {
+        return { error: 'NOT_FOUND' };
+      }
+
+      if (plan.isLocked) {
+        return { error: 'LOCKED' };
+      }
+
+      const output = [];
+
+      for (const stage of preparedStages) {
+        const updated = await tx.timeActionStage.updateMany({
+          where: {
+            timeActionPlanId,
+            stageName: stage.stageName,
+          },
+          data: stage.data,
+        });
+
+        if (updated.count === 0) {
+          return {
+            error: `Stage '${stage.stageName}' was not found in this plan.`,
+          };
+        }
+
+        const row = await tx.timeActionStage.findUnique({
+          where: {
+            timeActionPlanId_stageName: {
+              timeActionPlanId,
+              stageName: stage.stageName,
+            },
+          },
+        });
+
+        output.push(row);
+      }
+
+      return { data: output };
     });
 
-    if (!taPlan) {
+    if (result.error === 'NOT_FOUND') {
       return res.status(404).json({
         success: false,
-        message: `Time & Action Plan with ID ${timeActionPlanId} not found.`
+        message: `Time & Action Plan with ID ${timeActionPlanId} not found.`,
       });
     }
 
-    if (taPlan.isLocked) {
-      return res.status(400).json({
-        success: false,
-        message: 'This T&A Plan is locked. Stages cannot be modified.'
-      });
+    if (result.error === 'LOCKED') {
+      return badRequest(
+        res,
+        'This T&A Plan is locked. Stages cannot be modified.'
+      );
     }
 
-    // Process updates by matching timeActionPlanId and stageName
-    const updatePromises = stages.map(async (stageData) => {
-      const { stageName, ...fieldsToUpdate } = stageData;
-
-      if (!stageName) return null;
-
-      // Find the specific stage row using composite criteria (timeActionPlanId + stageName)
-      const existingStage = await prisma.timeActionStage.findFirst({
-        where: {
-          timeActionPlanId,
-          stageName
-        }
-      });
-
-      if (!existingStage) return null;
-
-      return prisma.timeActionStage.update({
-        where: { id: existingStage.id },
-        data: {
-          ...(fieldsToUpdate.plannedStartDate && { plannedStartDate: new Date(fieldsToUpdate.plannedStartDate) }),
-          ...(fieldsToUpdate.plannedEndDate && { plannedEndDate: new Date(fieldsToUpdate.plannedEndDate) }),
-          ...(fieldsToUpdate.actualStartDate && { actualStartDate: new Date(fieldsToUpdate.actualStartDate) }),
-          ...(fieldsToUpdate.actualEndDate && { actualEndDate: new Date(fieldsToUpdate.actualEndDate) }),
-          ...(fieldsToUpdate.responsibleDepartment && { responsibleDepartment: fieldsToUpdate.responsibleDepartment }),
-          ...(fieldsToUpdate.status && { status: fieldsToUpdate.status })
-        }
-      });
-    });
-
-    const results = (await Promise.all(updatePromises)).filter(Boolean);
+    if (result.error) {
+      return badRequest(res, result.error);
+    }
 
     return res.status(200).json({
       success: true,
-      message: `${results.length} stages updated successfully based on stage names.`,
-      data: results
+      message: `${result.data.length} stages updated successfully.`,
+      data: result.data,
     });
   } catch (error) {
-    console.error('Error updating T&A stages:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error while updating T&A stages.',
-      error: error.message
-    });
+    return serverError(
+      res,
+      'Internal server error while updating T&A stages.',
+      error
+    );
   }
 };

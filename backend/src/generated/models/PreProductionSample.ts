@@ -257,7 +257,7 @@ export type PreProductionSampleGroupByOutputType = {
   sampleType: $Enums.SampleType
   ppsVersion: number
   owiId: string
-  owi: string
+  owi: string | null
   rackId: string
   qcStatus: $Enums.InternalQcStatus
   isApproved: boolean
@@ -300,7 +300,7 @@ export type PreProductionSampleWhereInput = {
   sampleType?: Prisma.EnumSampleTypeFilter<"PreProductionSample"> | $Enums.SampleType
   ppsVersion?: Prisma.IntFilter<"PreProductionSample"> | number
   owiId?: Prisma.StringFilter<"PreProductionSample"> | string
-  owi?: Prisma.StringFilter<"PreProductionSample"> | string
+  owi?: Prisma.StringNullableFilter<"PreProductionSample"> | string | null
   rackId?: Prisma.StringFilter<"PreProductionSample"> | string
   qcStatus?: Prisma.EnumInternalQcStatusFilter<"PreProductionSample"> | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFilter<"PreProductionSample"> | boolean
@@ -320,7 +320,7 @@ export type PreProductionSampleOrderByWithRelationInput = {
   sampleType?: Prisma.SortOrder
   ppsVersion?: Prisma.SortOrder
   owiId?: Prisma.SortOrder
-  owi?: Prisma.SortOrder
+  owi?: Prisma.SortOrderInput | Prisma.SortOrder
   rackId?: Prisma.SortOrder
   qcStatus?: Prisma.SortOrder
   isApproved?: Prisma.SortOrder
@@ -343,7 +343,7 @@ export type PreProductionSampleWhereUniqueInput = Prisma.AtLeast<{
   sampleType?: Prisma.EnumSampleTypeFilter<"PreProductionSample"> | $Enums.SampleType
   ppsVersion?: Prisma.IntFilter<"PreProductionSample"> | number
   owiId?: Prisma.StringFilter<"PreProductionSample"> | string
-  owi?: Prisma.StringFilter<"PreProductionSample"> | string
+  owi?: Prisma.StringNullableFilter<"PreProductionSample"> | string | null
   rackId?: Prisma.StringFilter<"PreProductionSample"> | string
   qcStatus?: Prisma.EnumInternalQcStatusFilter<"PreProductionSample"> | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFilter<"PreProductionSample"> | boolean
@@ -363,7 +363,7 @@ export type PreProductionSampleOrderByWithAggregationInput = {
   sampleType?: Prisma.SortOrder
   ppsVersion?: Prisma.SortOrder
   owiId?: Prisma.SortOrder
-  owi?: Prisma.SortOrder
+  owi?: Prisma.SortOrderInput | Prisma.SortOrder
   rackId?: Prisma.SortOrder
   qcStatus?: Prisma.SortOrder
   isApproved?: Prisma.SortOrder
@@ -391,7 +391,7 @@ export type PreProductionSampleScalarWhereWithAggregatesInput = {
   sampleType?: Prisma.EnumSampleTypeWithAggregatesFilter<"PreProductionSample"> | $Enums.SampleType
   ppsVersion?: Prisma.IntWithAggregatesFilter<"PreProductionSample"> | number
   owiId?: Prisma.StringWithAggregatesFilter<"PreProductionSample"> | string
-  owi?: Prisma.StringWithAggregatesFilter<"PreProductionSample"> | string
+  owi?: Prisma.StringNullableWithAggregatesFilter<"PreProductionSample"> | string | null
   rackId?: Prisma.StringWithAggregatesFilter<"PreProductionSample"> | string
   qcStatus?: Prisma.EnumInternalQcStatusWithAggregatesFilter<"PreProductionSample"> | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolWithAggregatesFilter<"PreProductionSample"> | boolean
@@ -411,7 +411,7 @@ export type PreProductionSampleCreateInput = {
   sampleType?: $Enums.SampleType
   ppsVersion?: number
   owiId: string
-  owi: string
+  owi?: string | null
   rackId: string
   qcStatus?: $Enums.InternalQcStatus
   isApproved?: boolean
@@ -431,7 +431,7 @@ export type PreProductionSampleUncheckedCreateInput = {
   sampleType?: $Enums.SampleType
   ppsVersion?: number
   owiId: string
-  owi: string
+  owi?: string | null
   rackId: string
   qcStatus?: $Enums.InternalQcStatus
   isApproved?: boolean
@@ -451,7 +451,7 @@ export type PreProductionSampleUpdateInput = {
   sampleType?: Prisma.EnumSampleTypeFieldUpdateOperationsInput | $Enums.SampleType
   ppsVersion?: Prisma.IntFieldUpdateOperationsInput | number
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -471,7 +471,7 @@ export type PreProductionSampleUncheckedUpdateInput = {
   sampleType?: Prisma.EnumSampleTypeFieldUpdateOperationsInput | $Enums.SampleType
   ppsVersion?: Prisma.IntFieldUpdateOperationsInput | number
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -491,7 +491,7 @@ export type PreProductionSampleCreateManyInput = {
   sampleType?: $Enums.SampleType
   ppsVersion?: number
   owiId: string
-  owi: string
+  owi?: string | null
   rackId: string
   qcStatus?: $Enums.InternalQcStatus
   isApproved?: boolean
@@ -511,7 +511,7 @@ export type PreProductionSampleUpdateManyMutationInput = {
   sampleType?: Prisma.EnumSampleTypeFieldUpdateOperationsInput | $Enums.SampleType
   ppsVersion?: Prisma.IntFieldUpdateOperationsInput | number
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -531,7 +531,7 @@ export type PreProductionSampleUncheckedUpdateManyInput = {
   sampleType?: Prisma.EnumSampleTypeFieldUpdateOperationsInput | $Enums.SampleType
   ppsVersion?: Prisma.IntFieldUpdateOperationsInput | number
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rackId?: Prisma.StringFieldUpdateOperationsInput | string
   qcStatus?: Prisma.EnumInternalQcStatusFieldUpdateOperationsInput | $Enums.InternalQcStatus
   isApproved?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -722,7 +722,7 @@ export type $PreProductionSamplePayload<ExtArgs extends runtime.Types.Extensions
     sampleType: $Enums.SampleType
     ppsVersion: number
     owiId: string
-    owi: string
+    owi: string | null
     rackId: string
     qcStatus: $Enums.InternalQcStatus
     isApproved: boolean

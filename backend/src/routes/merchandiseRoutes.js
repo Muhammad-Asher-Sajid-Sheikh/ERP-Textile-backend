@@ -9,7 +9,8 @@ import {
     createTimeActionPlan, 
     upsertTimeActionStages,
     updateTimeActionPlan,
-    updateTimeActionStages
+    updateTimeActionStages,
+    getAllTimeActionPlans,
 } from '../controller/merchandiseController.js';
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.put('/pps/:id', updatePpsRecord);
 router.patch('/pps/:id/mark-done', markPPSAsDone);
 
 // Routes for Time Action Plan (TAP) management
+router.get('/ta-plan', getAllTimeActionPlans);
 router.post('/ta-plan', createTimeActionPlan);
 router.post('/ta-plan/:timeActionPlanId/stages', upsertTimeActionStages);
 router.put('/ta-plan/:id', updateTimeActionPlan);

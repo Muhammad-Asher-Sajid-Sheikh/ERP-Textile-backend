@@ -229,7 +229,7 @@ export type TimeActionPlanGroupByOutputType = {
   id: string
   icnNo: string
   owiId: string
-  owi: string
+  owi: string | null
   orderDate: Date
   shipmentDeadline: Date
   totalLeadTimeDays: number
@@ -267,7 +267,7 @@ export type TimeActionPlanWhereInput = {
   id?: Prisma.StringFilter<"TimeActionPlan"> | string
   icnNo?: Prisma.StringFilter<"TimeActionPlan"> | string
   owiId?: Prisma.StringFilter<"TimeActionPlan"> | string
-  owi?: Prisma.StringFilter<"TimeActionPlan"> | string
+  owi?: Prisma.StringNullableFilter<"TimeActionPlan"> | string | null
   orderDate?: Prisma.DateTimeFilter<"TimeActionPlan"> | Date | string
   shipmentDeadline?: Prisma.DateTimeFilter<"TimeActionPlan"> | Date | string
   totalLeadTimeDays?: Prisma.IntFilter<"TimeActionPlan"> | number
@@ -283,7 +283,7 @@ export type TimeActionPlanOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   icnNo?: Prisma.SortOrder
   owiId?: Prisma.SortOrder
-  owi?: Prisma.SortOrder
+  owi?: Prisma.SortOrderInput | Prisma.SortOrder
   orderDate?: Prisma.SortOrder
   shipmentDeadline?: Prisma.SortOrder
   totalLeadTimeDays?: Prisma.SortOrder
@@ -302,7 +302,7 @@ export type TimeActionPlanWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.TimeActionPlanWhereInput | Prisma.TimeActionPlanWhereInput[]
   icnNo?: Prisma.StringFilter<"TimeActionPlan"> | string
   owiId?: Prisma.StringFilter<"TimeActionPlan"> | string
-  owi?: Prisma.StringFilter<"TimeActionPlan"> | string
+  owi?: Prisma.StringNullableFilter<"TimeActionPlan"> | string | null
   orderDate?: Prisma.DateTimeFilter<"TimeActionPlan"> | Date | string
   shipmentDeadline?: Prisma.DateTimeFilter<"TimeActionPlan"> | Date | string
   totalLeadTimeDays?: Prisma.IntFilter<"TimeActionPlan"> | number
@@ -318,7 +318,7 @@ export type TimeActionPlanOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   icnNo?: Prisma.SortOrder
   owiId?: Prisma.SortOrder
-  owi?: Prisma.SortOrder
+  owi?: Prisma.SortOrderInput | Prisma.SortOrder
   orderDate?: Prisma.SortOrder
   shipmentDeadline?: Prisma.SortOrder
   totalLeadTimeDays?: Prisma.SortOrder
@@ -341,7 +341,7 @@ export type TimeActionPlanScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"TimeActionPlan"> | string
   icnNo?: Prisma.StringWithAggregatesFilter<"TimeActionPlan"> | string
   owiId?: Prisma.StringWithAggregatesFilter<"TimeActionPlan"> | string
-  owi?: Prisma.StringWithAggregatesFilter<"TimeActionPlan"> | string
+  owi?: Prisma.StringNullableWithAggregatesFilter<"TimeActionPlan"> | string | null
   orderDate?: Prisma.DateTimeWithAggregatesFilter<"TimeActionPlan"> | Date | string
   shipmentDeadline?: Prisma.DateTimeWithAggregatesFilter<"TimeActionPlan"> | Date | string
   totalLeadTimeDays?: Prisma.IntWithAggregatesFilter<"TimeActionPlan"> | number
@@ -356,7 +356,7 @@ export type TimeActionPlanCreateInput = {
   id?: string
   icnNo: string
   owiId: string
-  owi: string
+  owi?: string | null
   orderDate: Date | string
   shipmentDeadline: Date | string
   totalLeadTimeDays: number
@@ -372,7 +372,7 @@ export type TimeActionPlanUncheckedCreateInput = {
   id?: string
   icnNo: string
   owiId: string
-  owi: string
+  owi?: string | null
   orderDate: Date | string
   shipmentDeadline: Date | string
   totalLeadTimeDays: number
@@ -388,7 +388,7 @@ export type TimeActionPlanUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   icnNo?: Prisma.StringFieldUpdateOperationsInput | string
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   shipmentDeadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalLeadTimeDays?: Prisma.IntFieldUpdateOperationsInput | number
@@ -404,7 +404,7 @@ export type TimeActionPlanUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   icnNo?: Prisma.StringFieldUpdateOperationsInput | string
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   shipmentDeadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalLeadTimeDays?: Prisma.IntFieldUpdateOperationsInput | number
@@ -420,7 +420,7 @@ export type TimeActionPlanCreateManyInput = {
   id?: string
   icnNo: string
   owiId: string
-  owi: string
+  owi?: string | null
   orderDate: Date | string
   shipmentDeadline: Date | string
   totalLeadTimeDays: number
@@ -435,7 +435,7 @@ export type TimeActionPlanUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   icnNo?: Prisma.StringFieldUpdateOperationsInput | string
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   shipmentDeadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalLeadTimeDays?: Prisma.IntFieldUpdateOperationsInput | number
@@ -450,7 +450,7 @@ export type TimeActionPlanUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   icnNo?: Prisma.StringFieldUpdateOperationsInput | string
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   shipmentDeadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalLeadTimeDays?: Prisma.IntFieldUpdateOperationsInput | number
@@ -539,7 +539,7 @@ export type TimeActionPlanCreateWithoutStagesInput = {
   id?: string
   icnNo: string
   owiId: string
-  owi: string
+  owi?: string | null
   orderDate: Date | string
   shipmentDeadline: Date | string
   totalLeadTimeDays: number
@@ -554,7 +554,7 @@ export type TimeActionPlanUncheckedCreateWithoutStagesInput = {
   id?: string
   icnNo: string
   owiId: string
-  owi: string
+  owi?: string | null
   orderDate: Date | string
   shipmentDeadline: Date | string
   totalLeadTimeDays: number
@@ -585,7 +585,7 @@ export type TimeActionPlanUpdateWithoutStagesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   icnNo?: Prisma.StringFieldUpdateOperationsInput | string
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   shipmentDeadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalLeadTimeDays?: Prisma.IntFieldUpdateOperationsInput | number
@@ -600,7 +600,7 @@ export type TimeActionPlanUncheckedUpdateWithoutStagesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   icnNo?: Prisma.StringFieldUpdateOperationsInput | string
   owiId?: Prisma.StringFieldUpdateOperationsInput | string
-  owi?: Prisma.StringFieldUpdateOperationsInput | string
+  owi?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   shipmentDeadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalLeadTimeDays?: Prisma.IntFieldUpdateOperationsInput | number
@@ -721,7 +721,7 @@ export type $TimeActionPlanPayload<ExtArgs extends runtime.Types.Extensions.Inte
     id: string
     icnNo: string
     owiId: string
-    owi: string
+    owi: string | null
     orderDate: Date
     shipmentDeadline: Date
     totalLeadTimeDays: number
