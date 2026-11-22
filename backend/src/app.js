@@ -54,61 +54,45 @@ if (process.env.ENABLE_REQUEST_LOGGING === 'true') {
     });
 }
 
-// ================================================================
-// PUBLIC ROUTES (No authentication required)
-// ================================================================
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Server is running',
-        timestamp: new Date().toISOString()
-    });
-});
+ // ================================================================
+ // PUBLIC ROUTES (No authentication required)
+ // ================================================================
 
-// Authentication routes (login, register, refresh, logout, etc.)
-app.use('/api/auth', authRoutes);
-// Merchandise routes
-app.use('/api/merchandise', merchandiseRoutes);
-// BOM routes
-app.use('/api/bom', bomRoutes);
-// BOM Item routes
-app.use('/api/bom-items', bomItemRoutes);
-// OWI routes
-app.use('/api/owi', owiRoutes);
+ // Health check
+ app.get('/health', (req, res) => {
+     res.json({
+         success: true,
+         message: 'Server is running',
+         timestamp: new Date().toISOString()
+     });
+ });
+
+ // Authentication routes
+ app.use('/api/auth', authRoutes);
 
 
-// ================================================================
-// PROTECTED ROUTES (Authentication + Approval required)
-// ================================================================
+ // ================================================================
+ // PROTECTED ROUTES (Authentication + Approval required)
+ // ================================================================
 
-// Apply authentication check to all routes below this line
-app.use(checktoken);
+ // Verify access token and populate req.user
+ app.use(checktoken);
 
-// Apply approval check to ensure only approved users can access
-app.use(checkApproved);
+ // Only approved users can access ERP modules
+ app.use(checkApproved);
 
+ // Merchandise routes
+ app.use('/api/merchandise', merchandiseRoutes);
 
-// Merchandise routes
-app.use('/api/merchandise', merchandiseRoutes);
-// BOM routes
-app.use('/api/bom', bomRoutes);
-// BOM Item routes
-app.use('/api/bom-items', bomItemRoutes);
+ // BOM routes
+ app.use('/api/bom', bomRoutes);
 
+ // BOM Item routes
+ app.use('/api/bom-items', bomItemRoutes);
 
-
-// Merchandise routes
-app.use('/api/merchandise', merchandiseRoutes);
-// Example protected routes (add your business logic routes here)
-// app.use('/api/fabrics', fabricRoutes);
-// app.use('/api/production', productionRoutes);
-// app.use('/api/dashboard', dashboardRoutes);
-
-// ================================================================
-// ERROR HANDLING MIDDLEWARE
-// ================================================================
+ // OWI routes
+ app.use('/api/owi', owiRoutes);
 
 // 404 handler
 app.use((req, res) => {

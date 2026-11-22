@@ -14,23 +14,26 @@ const prisma = new PrismaClient({
 /**
  * Helper: Extracts authenticated user ID and IP address for the AuditLog
  */
+
 function getAuditContext(req) {
-  // const user = req.user; // Populated by your JWT auth middleware
-  // if (!user || !user.id) {
-  //   throw new Error('UNAUTHORIZED');
-  // }
+    const user = req.user;
 
-  const ipAddress =
-    (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',')[0].trim()) ||
-    req.socket?.remoteAddress ||
-    null;
+    if (!user?.id) {
+        throw new Error("UNAUTHORIZED");
+    }
 
-  return {
-    userId: 'e7b4de89-17b4-4649-9d15-25b5b6b73e1d',
-    performedBy: 'Dark',
-    ipAddress,
-  };
+    const ipAddress =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.socket?.remoteAddress ||
+        null;
+
+    return {
+        userId: user.id,
+        performedBy: user.email || "Authenticated User",
+        ipAddress,
+    };
 }
+
 
 /**
  * Helper: Calculates estimatedRequiredQty and totalBudgetedCost based on ChargingCriteria
@@ -441,12 +444,4 @@ export const deleteBOMItem = async (req, res) => {
     }
     return res.status(500).json({ success: false, message: error.message });
   }
-};
-
-export {
-  createBOMItem,
-  getAllBOMItems,
-  getBOMItemsByOrderBomId,
-  updateBOMItem,
-  deleteBOMItem,
 };
