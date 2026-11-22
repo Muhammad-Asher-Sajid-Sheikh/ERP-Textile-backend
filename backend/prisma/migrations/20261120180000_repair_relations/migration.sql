@@ -11,7 +11,18 @@ CREATE TABLE "Products" (
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Products_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "ProductFamily_orderId_idx" ON "ProductFamily"("orderId");
-CREATE INDEX "Products_orderId_idx" ON "Products"("orderId");
+
+CREATE TABLE IF NOT EXISTS "ProductFamily" (
+    "id" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
+    "productFamily" TEXT NOT NULL,
+    "productStage" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ProductFamily_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "ProductFamily_orderId_idx" ON "ProductFamily"("orderId");
+CREATE INDEX IF NOT EXISTS "Products_orderId_idx" ON "Products"("orderId");
 ALTER TABLE "Products" ADD CONSTRAINT "Products_orderId_fkey"
     FOREIGN KEY ("orderId") REFERENCES "OrderToken"("id") ON DELETE CASCADE ON UPDATE CASCADE;

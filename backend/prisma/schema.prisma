@@ -335,7 +335,8 @@ model OrderBom {
   approvedById    String?
   approvedAt      DateTime?
   
-  items           OrderBomItem[]
+  items                 OrderBomItem[]
+  workingInstructions   OrderWorkingInstruction[]
   
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -446,6 +447,7 @@ model OrderWorkingInstruction {
   @@index([atxScIon])
   @@map("order_wip_instructions")
 }
+
 model ProductFamily {
   id             String     @id @default(uuid())
   orderId        String

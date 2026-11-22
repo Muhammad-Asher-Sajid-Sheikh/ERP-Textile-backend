@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowJs": true,
+    "noImplicitAny": true,
     "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

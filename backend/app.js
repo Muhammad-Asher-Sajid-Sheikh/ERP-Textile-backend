@@ -7,14 +7,14 @@ import { cleanupExpiredTokens } from './controller/tokencontroller.js';
 
 //MiddleWares
 import { checktoken } from './middleware/checktoken.js';
-import { checkApproved } from './middleware/rbac.js';
+import { checkApproved } from './src/middleware/rbac.js';
 
 //Routes
 import authRoutes from './routes/auth.js';
-import merchandiseRoutes from './routes/merchandiseRoutes/merchandiseRoutes.js';
-import bomRoutes from './routes/merchandiseRoutes/BOMRoutes.js';
-import bomItemRoutes from './routes/merchandiseRoutes/BOMItemRoutes.js';
-import owiRoutes from './routes/merchandiseRoutes/owiRoutes.js';
+import merchandiseRoutes from './src/routes/merchandiseRoutes/merchandiseRoutes.js';
+import bomRoutes from './src/routes/merchandiseRoutes/BOMRoutes.js';
+import bomItemRoutes from './src/routes/merchandiseRoutes/BOMItemRoutes.js';
+import owiRoutes from './src/routes/merchandiseRoutes/owiRoutes.js';
 
 
 const app = express();
