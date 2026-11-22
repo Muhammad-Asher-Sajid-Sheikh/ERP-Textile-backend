@@ -1,5 +1,7 @@
 # TextileERP Auth API - Frontend Integration Guide
 
+> Updated backend: [README](./README.md) and [manual verification guide](./POSTMAN_VERIFICATION.md) describe the TypeScript runtime and WF-01 APIs. The auth examples below retain legacy top-level response fields; successful responses additionally include `statusCode` and `data`, and errors include `code`, `errors` and `requestId`. All protected calls check live APPROVED status and role. Refresh validates the stored session first, retains a valid matching access token, and otherwise rotates using the cookie (access header optional). The shared auth rate limit is five requests per 15 minutes, not configurable through the legacy RATE_LIMIT variables.
+
 ## Quick Reference for Frontend Developers
 
 This guide helps you integrate the TextileERP authentication system with your frontend application.

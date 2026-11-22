@@ -1,5 +1,7 @@
 # TextileERP - Complete API Reference
 
+> Updated backend: [README](./README.md) and [manual verification guide](./POSTMAN_VERIFICATION.md) describe the TypeScript runtime and WF-01 APIs. The auth examples below retain legacy top-level response fields; successful responses additionally include `statusCode` and `data`, and errors include `code`, `errors` and `requestId`. All protected calls check live APPROVED status and role. Refresh validates the stored session first, retains a valid matching access token, and otherwise rotates using the cookie (access header optional). The shared auth rate limit is five requests per 15 minutes, not configurable through the legacy RATE_LIMIT variables.
+
 ## Base URL
 ```
 http://localhost:3000
@@ -70,7 +72,7 @@ Content-Type: application/json
 
 **Description:** Register a new user account. The account will be created with `PENDING` status and requires management approval.
 
-**Rate Limit:** 100 requests per 15 minutes
+**Rate Limit:** 5 requests per 15 minutes
 
 **Headers:**
 ```
@@ -185,7 +187,7 @@ Content-Type: application/json
 
 **Description:** Login with email and password. Returns access token and sets refresh token cookie.
 
-**Rate Limit:** 100 requests per 15 minutes
+**Rate Limit:** 5 requests per 15 minutes
 
 **Headers:**
 ```
@@ -221,7 +223,7 @@ Content-Type: application/json
 
 **Cookies Set:**
 ```
-Set-Cookie: refreshtoken={refreshToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800000
+Set-Cookie: refreshtoken={refreshToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800
 ```
 
 **Error Responses:**
@@ -295,9 +297,9 @@ Set-Cookie: refreshtoken={refreshToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age
 
 **Endpoint:** `POST /api/auth/refresh`
 
-**Description:** Get a new access token using the refresh token. Old refresh token is revoked.
+**Description:** Get a new access token using the refresh token. The old refresh token is revoked when rotation is needed.
 
-**Rate Limit:** 100 requests per 15 minutes
+**Rate Limit:** 5 requests per 15 minutes
 
 **Headers:**
 ```
@@ -319,7 +321,7 @@ Cookie: refreshtoken={refreshToken}
 
 **Cookies Set:**
 ```
-Set-Cookie: refreshtoken={newRefreshToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800000
+Set-Cookie: refreshtoken={newRefreshToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800
 ```
 
 **Error Responses:**
@@ -355,9 +357,9 @@ Set-Cookie: refreshtoken={newRefreshToken}; HttpOnly; Path=/; SameSite=Lax; Max-
 - `500 Internal Server Error` - Server error
 
 **Security Features:**
-- Old refresh token is revoked on success
+- Old refresh token is revoked when rotation is needed
 - Token rotation implemented
-- Audit log entry created
+- Stored refresh session and live account status checked before success
 
 ---
 
@@ -1212,8 +1214,8 @@ PATCH /api/auth/admin/users/:id/reject
 2. **Access tokens are short-lived (15 minutes)** - Always refresh when expired
 3. **Refresh tokens are httpOnly cookies** - Cannot be accessed via JavaScript
 4. **Passwords are hashed with bcrypt** - Stored securely in database
-5. **Rate limiting is enforced** - 100 requests per 15 minutes
-6. **All actions are logged** - Check audit logs for compliance
+5. **Rate limiting is enforced** - 5 requests per 15 minutes
+6. **Account mutations and login events are audited** - Account mutations are transactional; login logging is best-effort
 7. **IP addresses are tracked** - For security audit trails
 
 ---

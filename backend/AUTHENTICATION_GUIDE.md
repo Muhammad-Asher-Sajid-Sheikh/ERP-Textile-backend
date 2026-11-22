@@ -1,5 +1,7 @@
 # TextileERP Authentication System - Complete Guide
 
+> Updated backend: [README](./README.md) and [manual verification guide](./POSTMAN_VERIFICATION.md) describe the TypeScript runtime and WF-01 APIs. The auth examples below retain legacy top-level response fields; successful responses additionally include `statusCode` and `data`, and errors include `code`, `errors` and `requestId`. All protected calls check live APPROVED status and role. Refresh validates the stored session first, retains a valid matching access token, and otherwise rotates using the cookie (access header optional). The shared auth rate limit is five requests per 15 minutes, not configurable through the legacy RATE_LIMIT variables.
+
 ## 📋 Table of Contents
 1. [System Overview](#system-overview)
 2. [Database Schema](#database-schema)
@@ -117,7 +119,7 @@ enum AuditActionType {
 
 ### 1. Install Dependencies
 ```bash
-npm install
+npm ci
 ```
 
 ### 2. Configure Environment Variables
@@ -148,8 +150,9 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### 5. Run Prisma Migrations
 ```bash
-# Create/update database schema
-npx prisma migrate dev --name init
+# Inspect migration state, then apply the existing forward migrations
+npx prisma migrate status
+npx prisma migrate deploy
 
 # Generate Prisma client
 npx prisma generate
@@ -157,6 +160,7 @@ npx prisma generate
 
 ### 6. Start the Server
 ```bash
+npm run build
 npm start
 # or for development with auto-reload
 npm run dev
@@ -188,7 +192,7 @@ npm run dev
 - **Database tracking:** All tokens tracked in DB for revocation
 
 ### 4. Rate Limiting
-- **100 requests per 15 minutes** on auth endpoints
+- **5 requests per 15 minutes** on auth endpoints
 - Prevents brute force attacks
 
 ### 5. Audit Logging

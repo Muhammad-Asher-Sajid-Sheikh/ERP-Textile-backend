@@ -4,8 +4,10 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated"
+  provider            = "prisma-client"
+  output              = "../src/generated"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
 }
 
 datasource db {
@@ -45,23 +47,43 @@ enum AuditActionType {
 }
 
 model User {
-  id                String        @id @default(uuid())
-  email             String        @unique
-  passwordHash      String
-  name              String
-  role              Role          @default(PRODUCTION)
-  status            AccountStatus @default(PENDING)
-  department        String?
-  isPasswordChanged Boolean       @default(false)
-  loginAttempts     Int           @default(0)
-  lastLoginAt       DateTime?
-  lastLoginIp       String?
-  lockedUntil       DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime?      @updatedAt
+  technicalReviewsSubmitted InquiryTechnicalReview[] @relation("ReviewSubmitter")
+  id                        String                   @id @default(uuid())
+  email                     String                   @unique
+  passwordHash              String
+  name                      String
+  role                      Role                     @default(PRODUCTION)
+  status                    AccountStatus            @default(PENDING)
+  department                String?
+  isPasswordChanged         Boolean                  @default(false)
+  loginAttempts             Int                      @default(0)
+  lastLoginAt               DateTime?
+  lastLoginIp               String?
+  lockedUntil               DateTime?
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime?                @updatedAt
 
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
+  refreshTokens          RefreshToken[]
+  auditLogs              AuditLog[]
+  customersCreated       Customer[]                   @relation("CustomerCreator")
+  customersUpdated       Customer[]                   @relation("CustomerModifier")
+  inquiriesCreated       Inquiry[]                    @relation("InquiryCreator")
+  inquiriesAssigned      Inquiry[]                    @relation("InquiryMerchandiser")
+  evidenceUploaded       InquiryEvidence[]
+  inquiryChanges         InquiryStatusHistory[]
+  acknowledgements       InquiryAcknowledgement[]
+  businessAuditLogs      BusinessAuditLog[]
+  technicalReviews       InquiryTechnicalReview[]     @relation("ReviewCreator")
+  productionReviews      InquiryTechnicalReview[]     @relation("ProductionReviewer")
+  reviewItems            TechnicalReviewItem[]
+  consultations          ProductionConsultation[]
+  clarificationsCreated  CustomerClarification[]      @relation("ClarificationCreator")
+  clarificationsAssigned CustomerClarification[]      @relation("ClarificationOwner")
+  clarificationResponses ClarificationResponse[]
+  baselinesCreated       RequirementBaselineVersion[]
+  provisionalRequests    ProvisionalReviewRequest[]   @relation("ProvisionalRequester")
+  provisionalReviews     ProvisionalReviewRequest[]   @relation("ProvisionalReviewer")
+  provisionalDecisions   ProvisionalReviewDecision[]
 }
 
 model RefreshToken {
@@ -79,27 +101,27 @@ model RefreshToken {
 }
 
 model AuditLog {
-  id            String            @id @default(uuid())
+  id            String          @id @default(uuid())
   userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   actionType    AuditActionType
   actionDetails String?
   performedBy   String?
   ipAddress     String?
-  timestamp     DateTime          @default(now())
+  timestamp     DateTime        @default(now())
 
   @@index([userId])
   @@index([timestamp])
   @@index([actionType])
 }
 
+model OrderToken {
+  id              String          @id @default(uuid())
+  productFamilies ProductFamily[] // Back-relation field
+  products        Products[]
 
-model OrderToken{
-  id            String            @id @default(uuid())
-  //productFamilies ProductFamily[] // Back-relation field
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 // MERCHANDISE Department
@@ -423,4 +445,516 @@ model OrderWorkingInstruction {
   @@index([icnNo])
   @@index([atxScIon])
   @@map("order_wip_instructions")
+}
+model ProductFamily {
+  id             String     @id @default(uuid())
+  orderId        String
+  order          OrderToken @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productType    String
+  productList    String
+  normalMaterial String
+  productStage   String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now()) @updatedAt
+
+  @@index([orderId])
+}
+
+model Products {
+  id      String     @id @default(uuid())
+  orderId String // Scalar field storing the foreign key
+  order   OrderToken @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productType String
+  productList String?
+
+  normalMaterial String?
+  productStage   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([orderId])
+}
+
+enum InquirySource {
+  EMAIL
+  WHATSAPP
+  WEBSITE
+  BUYING_AGENT
+  MEETING
+  TELEPHONE
+  OTHER
+}
+
+enum InquiryStatus {
+  RECEIVED
+  REGISTERED
+  ACKNOWLEDGED
+  DUPLICATE_LINKED
+  ON_HOLD
+  CLOSED
+}
+
+enum InquiryPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum CommercialPartyRole {
+  LEGAL_BUYER
+  BUYER
+  AGENT
+  ACCOUNT_OWNER
+  REMITTER
+  CONSIGNEE
+  ULTIMATE_CUSTOMER
+}
+
+model Customer {
+  id            String                 @id @default(uuid())
+  code          String                 @unique
+  name          String
+  country       String
+  customerType  String?
+  active        Boolean                @default(true)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  createdById   String
+  updatedById   String
+  createdBy     User                   @relation("CustomerCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy     User                   @relation("CustomerModifier", fields: [updatedById], references: [id], onDelete: Restrict)
+  contacts      CustomerContact[]
+  relationships CustomerRelationship[] @relation("CustomerParties")
+  relatedTo     CustomerRelationship[] @relation("RelatedParty")
+  inquiries     Inquiry[]
+  sequences     IrnSequence[]
+
+  @@index([active, name])
+}
+
+model CustomerContact {
+  id          String   @id @default(uuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  name        String
+  email       String?
+  phone       String?
+  designation String?
+
+  @@index([customerId])
+}
+
+model CustomerRelationship {
+  id         String              @id @default(uuid())
+  customerId String
+  partyId    String
+  role       CommercialPartyRole
+  customer   Customer            @relation("CustomerParties", fields: [customerId], references: [id], onDelete: Restrict)
+  party      Customer            @relation("RelatedParty", fields: [partyId], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, partyId, role])
+  @@index([partyId])
+}
+
+model IrnSequence {
+  customerId String
+  year       Int
+  lastValue  Int
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@id([customerId, year])
+}
+
+model Inquiry {
+  id                   String                       @id @default(uuid())
+  irn                  String                       @unique
+  irnYear              Int
+  irnSerial            Int
+  customerId           String
+  customer             Customer                     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  source               InquirySource
+  sourceReference      String?
+  receivedAt           DateTime
+  productCategory      String?
+  seasonProgram        String?
+  destination          String?
+  estimatedQuantity    Decimal?                     @db.Decimal(20, 4)
+  quantityUnit         String?
+  targetDate           DateTime?                    @db.Date
+  merchandiserId       String
+  merchandiser         User                         @relation("InquiryMerchandiser", fields: [merchandiserId], references: [id], onDelete: Restrict)
+  priority             InquiryPriority              @default(NORMAL)
+  responseDueAt        DateTime
+  nextAction           String
+  status               InquiryStatus                @default(REGISTERED)
+  statusReason         String?
+  duplicateOfId        String?
+  duplicateOf          Inquiry?                     @relation("DuplicateInquiry", fields: [duplicateOfId], references: [id], onDelete: Restrict)
+  duplicates           Inquiry[]                    @relation("DuplicateInquiry")
+  originalEvidenceHash String
+  createdAt            DateTime                     @default(now())
+  updatedAt            DateTime                     @updatedAt
+  createdById          String
+  createdBy            User                         @relation("InquiryCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  evidence             InquiryEvidence[]
+  history              InquiryStatusHistory[]
+  acknowledgements     InquiryAcknowledgement[]
+  technicalReviews     InquiryTechnicalReview[]
+  clarifications       CustomerClarification[]
+  baselines            RequirementBaselineVersion[]
+  provisionalRequests  ProvisionalReviewRequest[]
+
+  @@unique([customerId, irnYear, irnSerial])
+  @@index([customerId, createdAt])
+  @@index([merchandiserId, status])
+  @@index([status, responseDueAt])
+  @@index([customerId, originalEvidenceHash])
+  @@index([customerId, sourceReference])
+  @@index([duplicateOfId])
+}
+
+model InquiryEvidence {
+  id                 String            @id @default(uuid())
+  inquiryId          String
+  inquiry            Inquiry           @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  source             InquirySource
+  receivedAt         DateTime
+  message            String?
+  reference          String?
+  correctsEvidenceId String?
+  correctsEvidence   InquiryEvidence?  @relation("EvidenceCorrection", fields: [correctsEvidenceId], references: [id], onDelete: Restrict)
+  corrections        InquiryEvidence[] @relation("EvidenceCorrection")
+  filename           String?
+  mediaType          String?
+  byteSize           Int?
+  attachmentBytes    Bytes?
+  attachmentSha256   String?
+  contentSha256      String
+  uploadedById       String
+  uploadedBy         User              @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt          DateTime          @default(now())
+
+  reviewItems            TechnicalReviewItem[]
+  clarificationResponses ClarificationResponse[]
+  baselineAssertions     BaselineAssertion[]
+
+  @@index([inquiryId, createdAt])
+  @@index([correctsEvidenceId])
+}
+
+model InquiryAcknowledgement {
+  id             String        @id @default(uuid())
+  inquiryId      String
+  inquiry        Inquiry       @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  acknowledgedAt DateTime
+  channel        InquirySource
+  recipient      String
+  message        String?
+  reference      String?
+  recordedById   String
+  recordedBy     User          @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  createdAt      DateTime      @default(now())
+
+  @@index([inquiryId, createdAt])
+}
+
+model InquiryStatusHistory {
+  id             String         @id @default(uuid())
+  inquiryId      String
+  inquiry        Inquiry        @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  previousStatus InquiryStatus?
+  newStatus      InquiryStatus
+  changedById    String
+  changedBy      User           @relation(fields: [changedById], references: [id], onDelete: Restrict)
+  reason         String?
+  notes          String?
+  createdAt      DateTime       @default(now())
+
+  @@index([inquiryId, createdAt])
+}
+
+model BusinessAuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  entityType String
+  entityId   String
+  oldValues  Json?
+  newValues  Json?
+  reason     String?
+  requestId  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+// WF-02 outcomes do not change the WF-01 inquiry lifecycle.
+enum TechnicalReviewOutcome {
+  COMPLETE_FOR_CLARIFICATION_BASELINE
+  CUSTOMER_CLARIFICATION_REQUIRED
+  TECHNICAL_REVIEW_PENDING
+  FEASIBLE_WITH_ASSUMPTIONS
+  NOT_FEASIBLE
+}
+
+enum RequirementState {
+  VERIFIED
+  UNVERIFIED
+  MISSING
+  ASSUMED
+  NOT_APPLICABLE
+}
+
+enum RequirementArea {
+  PRODUCT
+  QUANTITY
+  COMMERCIAL
+  TIMING
+  PACKING
+  QUALITY
+}
+
+enum RequirementStage {
+  QUOTATION
+  SAMPLE
+  ORDER_ACTIVATION
+}
+
+enum ConsultationConclusion {
+  SUPPORTED
+  TECHNICAL_HOLD
+  NOT_FEASIBLE
+}
+
+enum ConfirmationState {
+  UNANSWERED
+  WRITTEN_CONFIRMATION_PENDING
+  WRITTEN_CONFIRMED
+}
+
+enum BaselineOutcome {
+  BASELINE_READY_FOR_FEASIBILITY
+  CLARIFICATION_PENDING
+  CUSTOMER_HOLD
+}
+
+enum ProvisionalDisposition {
+  REJECTED
+  RETURNED_FOR_INFORMATION
+}
+
+model InquiryTechnicalReview {
+  submittedById          String?
+  submittedBy            User?                        @relation("ReviewSubmitter", fields: [submittedById], references: [id], onDelete: Restrict)
+  id                     String                       @id @default(uuid())
+  inquiryId              String
+  inquiry                Inquiry                      @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  version                Int
+  revision               Int                          @default(1)
+  productFamily          String
+  applicabilityReference String?
+  assumptions            String[]
+  notes                  String?
+  outcome                TechnicalReviewOutcome?
+  submittedAt            DateTime?
+  createdById            String
+  createdBy              User                         @relation("ReviewCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  productionReviewerId   String?
+  productionReviewer     User?                        @relation("ProductionReviewer", fields: [productionReviewerId], references: [id], onDelete: Restrict)
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  items                  TechnicalReviewItem[]
+  consultations          ProductionConsultation[]
+  baselines              RequirementBaselineVersion[]
+  provisionalRequests    ProvisionalReviewRequest[]
+
+  @@unique([inquiryId, version])
+  @@index([productionReviewerId])
+  @@index([outcome, submittedAt])
+}
+
+model TechnicalReviewItem {
+  id                  String                  @id @default(uuid())
+  reviewId            String
+  review              InquiryTechnicalReview  @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  key                 String
+  area                RequirementArea
+  label               String
+  state               RequirementState
+  value               String?
+  requiredFor         RequirementStage[]
+  applicabilityReason String
+  needsProduction     Boolean                 @default(false)
+  evidenceId          String?
+  evidence            InquiryEvidence?        @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+  ownerId             String?
+  owner               User?                   @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  dueAt               DateTime?
+  followUpAt          DateTime?
+  escalationReason    String?
+  questions           ClarificationQuestion[]
+
+  @@unique([reviewId, key])
+  @@index([ownerId, dueAt])
+  @@index([evidenceId])
+}
+
+// Production records its own conclusion against an exact draft revision.
+model ProductionConsultation {
+  id             String                 @id @default(uuid())
+  reviewId       String
+  review         InquiryTechnicalReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  reviewRevision Int
+  conclusion     ConsultationConclusion
+  findings       String
+  assumptions    String[]
+  recordedById   String
+  recordedBy     User                   @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  createdAt      DateTime               @default(now())
+
+  @@index([reviewId, reviewRevision, createdAt])
+}
+
+model CustomerClarification {
+  id               String                  @id @default(uuid())
+  inquiryId        String
+  inquiry          Inquiry                 @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  subject          String
+  requestedAt      DateTime
+  dueAt            DateTime
+  followUpAt       DateTime
+  responsibleId    String
+  responsible      User                    @relation("ClarificationOwner", fields: [responsibleId], references: [id], onDelete: Restrict)
+  createdById      String
+  createdBy        User                    @relation("ClarificationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  customerHold     Boolean                 @default(false)
+  escalationReason String?
+  escalatedAt      DateTime?
+  revision         Int                     @default(1)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  questions        ClarificationQuestion[]
+
+  @@index([inquiryId, createdAt])
+  @@index([responsibleId, dueAt])
+  @@index([escalatedAt])
+}
+
+model ClarificationQuestion {
+  id              String                  @id @default(uuid())
+  clarificationId String
+  clarification   CustomerClarification   @relation(fields: [clarificationId], references: [id], onDelete: Restrict)
+  question        String
+  reviewItemId    String?
+  reviewItem      TechnicalReviewItem?    @relation(fields: [reviewItemId], references: [id], onDelete: Restrict)
+  confirmation    ConfirmationState       @default(UNANSWERED)
+  responses       ClarificationResponse[]
+
+  @@index([clarificationId, confirmation])
+  @@index([reviewItemId])
+}
+
+// Answers are append-only; a later answer never erases a customer's earlier message.
+model ClarificationResponse {
+  sequence     Int
+  id           String                @id @default(uuid())
+  questionId   String
+  question     ClarificationQuestion @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  response     String
+  receivedAt   DateTime
+  confirmation ConfirmationState
+  evidenceId   String
+  evidence     InquiryEvidence       @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+  recordedById String
+  recordedBy   User                  @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  createdAt    DateTime              @default(now())
+
+  @@unique([questionId, sequence])
+  @@index([questionId, createdAt])
+  @@index([evidenceId])
+}
+
+model RequirementBaselineVersion {
+  sourceFingerprint String
+  id                String                       @id @default(uuid())
+  inquiryId         String
+  inquiry           Inquiry                      @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  reviewId          String
+  review            InquiryTechnicalReview       @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  version           Int
+  revision          Int                          @default(1)
+  previousVersionId String?
+  previousVersion   RequirementBaselineVersion?  @relation("BaselineRevision", fields: [previousVersionId], references: [id], onDelete: Restrict)
+  revisions         RequirementBaselineVersion[] @relation("BaselineRevision")
+  assumptions       String[]
+  openQuestions     String[]
+  changeReason      String
+  outcome           BaselineOutcome              @default(CLARIFICATION_PENDING)
+  frozenAt          DateTime?
+  createdById       String
+  createdBy         User                         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+  assertions        BaselineAssertion[]
+
+  @@unique([inquiryId, version])
+  @@index([reviewId])
+  @@index([previousVersionId])
+}
+
+model BaselineAssertion {
+  id         String                     @id @default(uuid())
+  baselineId String
+  baseline   RequirementBaselineVersion @relation(fields: [baselineId], references: [id], onDelete: Restrict)
+  key        String
+  value      String
+  confirmed  Boolean
+  evidenceId String
+  evidence   InquiryEvidence            @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+
+  @@unique([baselineId, key])
+  @@index([evidenceId])
+}
+
+// Requests are immutable. A changed scope requires a new request and review.
+// No grant-producing decision exists until specialized authority is mapped.
+model ProvisionalReviewRequest {
+  id                 String                      @id @default(uuid())
+  inquiryId          String
+  inquiry            Inquiry                     @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  reviewId           String
+  review             InquiryTechnicalReview      @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  missingInformation Json
+  proposedActivity   String
+  unaffectedScope    String
+  assumptions        String[]
+  risks              String[]
+  requestedById      String
+  requestedBy        User                        @relation("ProvisionalRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  reviewerId         String
+  reviewer           User                        @relation("ProvisionalReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  expiresAt          DateTime?
+  createdAt          DateTime                    @default(now())
+  decisions          ProvisionalReviewDecision[]
+
+  @@index([inquiryId, createdAt])
+  @@index([reviewerId, expiresAt])
+  @@index([reviewId])
+}
+
+model ProvisionalReviewDecision {
+  id           String                   @id @default(uuid())
+  requestId    String                   @unique
+  request      ProvisionalReviewRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  disposition  ProvisionalDisposition
+  reason       String
+  conditions   String[]
+  recordedById String
+  recordedBy   User                     @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  createdAt    DateTime                 @default(now())
 }
