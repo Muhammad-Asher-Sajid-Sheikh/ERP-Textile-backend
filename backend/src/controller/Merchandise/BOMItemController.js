@@ -26,7 +26,7 @@ function getAuditContext(req) {
     null;
 
   return {
-    userId: 'e7b4de89-17b4-4649-9d15-25b5b6b73e1d',
+    userId: process.env.TESTUSER,
     performedBy: 'Dark',
     ipAddress,
   };

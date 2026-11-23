@@ -9,3 +9,6 @@ uploads/
 /generated/prisma
 /src/generated/prisma
 /src/generated/
+
+
+/src/generated

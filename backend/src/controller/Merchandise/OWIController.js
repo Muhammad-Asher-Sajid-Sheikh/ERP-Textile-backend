@@ -50,7 +50,7 @@ export const createOWI = async (req, res) => {
       revisionReason,
     } = req.body;
 
-    const userId = req.id;
+    const userId = process.env.TESTUSER; // Replace with req.id when authentication is implemented
 
     if (!icnNo || !skuId || !mongoPayloadId) {
       return res.status(400).json({
