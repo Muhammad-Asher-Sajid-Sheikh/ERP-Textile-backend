@@ -122,8 +122,6 @@ model AuditLog {
 
 model OrderToken {
   id              String          @id @default(uuid())
-  productFamilies ProductFamily[] // Back-relation field
-  products        Products[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -223,7 +221,8 @@ model TimeActionPlan {
   totalLeadTimeDays  Int              // Auto-calculated total duration
   
   // Relation: One T&A plan has many stages stored in a proper table
-  stages             TimeActionStage[] 
+  stages             TimeActionStage[]
+  masterLots         MasterLot[] 
   
   taVersion          Int              @default(1)
   isLocked           Boolean          @default(false)
@@ -487,38 +486,75 @@ model RackRetention {
 }
 
 
-
-
-model ProductFamily {
-  id             String     @id @default(uuid())
-  orderId        String
-  order          OrderToken @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productType    String
-  productList    String
-  normalMaterial String
-  productStage   String
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @default(now()) @updatedAt
-
-  @@index([orderId])
+enum ActiveGate {
+  GATE_A
+  GATE_B
+  GATE_C
 }
 
-model Products {
-  id      String     @id @default(uuid())
-  orderId String // Scalar field storing the foreign key
-  order   OrderToken @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  productType String
-  productList String?
-
-  normalMaterial String?
-  productStage   String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  @@index([orderId])
+enum StageLotStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  HOLD
 }
+
+model MasterLot {
+  id               String         @id @default(uuid())
+  lotCode          String         @unique
+  tnaId            String
+  tna              TimeActionPlan @relation(fields: [tnaId], references: [id], onDelete: Restrict)
+
+  activeGate       ActiveGate     @default(GATE_A)
+  isApproved       Boolean        @default(false)
+  targetQuantity   Int?
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  remarks          String?        @db.Text
+
+  stageLots        StageWiseLot[]
+
+  createdBy        String
+  updatedBy        String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([tnaId])
+  @@index([activeGate])
+  @@map("master_lots")
+}
+
+model StageWiseLot {
+  id               String         @id @default(uuid())
+  masterLotId      String
+  masterLot        MasterLot      @relation(fields: [masterLotId], references: [id], onDelete: Cascade)
+
+  gate             ActiveGate
+  stageName        String
+  stageSequence    Int
+  allocatedQty     Int
+  completedQty     Int?           @default(0)
+  rejectedQty      Int?           @default(0)
+
+  scheduledStartAt DateTime?
+  scheduledEndAt   DateTime?
+
+  status           StageLotStatus @default(SCHEDULED)
+  notes            String?        @db.Text
+
+  createdBy        String
+  updatedBy        String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([masterLotId, gate, stageSequence])
+  @@index([masterLotId])
+  @@index([gate])
+  @@index([status])
+  @@map("stage_wise_lots")
+}
+
+
 
 
 //MARKETING
