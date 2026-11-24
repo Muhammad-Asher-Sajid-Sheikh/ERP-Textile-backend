@@ -11,6 +11,10 @@ import {
   getStageWiseLotById,
   updateStageWiseLot,
   deleteStageWiseLot,
+
+  transitionMasterLotToGateA,
+  transitionMasterLotToGateB,
+  transitionMasterLotToGateC,
 } from "../../controller/production/PLController.js"; // Adjust path to match your file location
 
 const router = Router();
@@ -33,5 +37,11 @@ router.get("/stage-wise/:id", getStageWiseLotById);
 router.put("/stage-wise/:id", updateStageWiseLot);
 router.patch("/stage-wise/:id", updateStageWiseLot);
 router.delete("/stage-wise/:id", deleteStageWiseLot);
+
+
+// Gate transition routes
+router.patch("/:id/transition/gate-a", transitionMasterLotToGateA);
+router.patch("/:id/transition/gate-b", transitionMasterLotToGateB);
+router.patch("/:id/transition/gate-c", transitionMasterLotToGateC);
 
 export default router;

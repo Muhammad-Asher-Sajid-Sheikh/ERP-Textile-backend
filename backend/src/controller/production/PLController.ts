@@ -1,4 +1,4 @@
-import { PrismaClient, AuditActionType } from "../../generated/client.js";
+import { PrismaClient, AuditActionType, ActiveGate } from "../../generated/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import "dotenv/config";
 import { type Request, type Response } from "express";
@@ -1133,4 +1133,106 @@ export const deleteStageWiseLot = async (req: Request, res: Response) => {
       message: error.message || "Failed to delete stage-wise lot",
     });
   }
+};
+
+
+const transitionMasterLotGate = async (
+  req: Request,
+  res: Response,
+  targetGate: ActiveGate
+) => {
+  try {
+    const accessToken = getAccessToken(req);
+    const userId = getUserId(accessToken);
+    const id = getParamId(req);
+    const { remarks, isApproved } = req.body ?? {};
+
+    const existingLot = await prisma.masterLot.findUnique({
+      where: { id },
+    });
+
+    if (!existingLot) {
+      return res.status(404).json({
+        success: false,
+        message: "Master lot record not found",
+      });
+    }
+
+    if (existingLot.activeGate === targetGate) {
+      return res.status(409).json({
+        success: false,
+        message: `Master lot is already at ${targetGate}`,
+      });
+    }
+
+    const updatedLot = await prisma.masterLot.update({
+      where: { id },
+      data: {
+        activeGate: targetGate,
+        updatedBy: userId,
+        ...(typeof isApproved === "boolean" && { isApproved }),
+        ...(remarks !== undefined && { remarks }),
+      },
+      include: {
+        tna: true,
+        stageLots: {
+          orderBy: {
+            stageSequence: "asc",
+          },
+        },
+      },
+    });
+
+    await logRackRetentionActivity(
+      req,
+      "UPDATE" as AuditActionType,
+      `Transitioned master lot ${id} (${existingLot.lotCode}) from ${existingLot.activeGate} to ${targetGate}`,
+      userId
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Master lot transitioned to ${targetGate} successfully`,
+      data: updatedLot,
+    });
+  } catch (error: any) {
+    console.error(`Transition MasterLot to ${targetGate} Error:`, error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || `Failed to transition master lot to ${targetGate}`,
+    });
+  }
+};
+
+// ==========================================
+// 6. TRANSITION MASTER LOT TO GATE A
+// ==========================================
+
+export const transitionMasterLotToGateA = async (
+  req: Request,
+  res: Response
+) => {
+  return transitionMasterLotGate(req, res, ActiveGate.GATE_A);
+};
+
+// ==========================================
+// 7. TRANSITION MASTER LOT TO GATE B
+// ==========================================
+
+export const transitionMasterLotToGateB = async (
+  req: Request,
+  res: Response
+) => {
+  return transitionMasterLotGate(req, res, ActiveGate.GATE_B);
+};
+
+// ==========================================
+// 8. TRANSITION MASTER LOT TO GATE C
+// ==========================================
+
+export const transitionMasterLotToGateC = async (
+  req: Request,
+  res: Response
+) => {
+  return transitionMasterLotGate(req, res, ActiveGate.GATE_C);
 };
