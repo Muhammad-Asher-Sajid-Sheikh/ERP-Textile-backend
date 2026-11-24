@@ -14,6 +14,7 @@ import merchandiseRoutes from './routes/merchandiseRoutes/merchandiseRoutes.js';
 import bomRoutes from './routes/merchandiseRoutes/BOMRoutes.js';
 import bomItemRoutes from './routes/merchandiseRoutes/BOMItemRoutes.js';
 import owiRoutes from './routes/merchandiseRoutes/owiRoutes.js';
+import rackRetentionRoutes from "./routes/productionRoutes/PLRoutes.js";
 
 import { errorHandler } from './middleware/error.middleware.js';
 import { notFound } from './middleware/notFound.middleware.js';
@@ -45,6 +46,11 @@ app.use('/api/merchandise', merchandiseRoutes);
 app.use('/api/bom', bomRoutes);
 app.use('/api/bom-items', bomItemRoutes);
 app.use('/api/owi', owiRoutes);
+
+
+//Production Routes
+app.use("/api/rack-retentions", rackRetentionRoutes);
+
 
 
 app.use(notFound);

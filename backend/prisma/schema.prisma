@@ -44,6 +44,11 @@ enum AuditActionType {
   OWI_CREATED
   OWI_UPDATED
   OWI_DELETED
+
+  CREATE
+  READ
+  UPDATE
+  DELETE
 }
 
 model User {
@@ -154,6 +159,7 @@ enum ReasonCategory {
   OTHER
 }
 
+
 //PPS
 model PreProductionSample {
   id              String               @id @default(uuid())
@@ -165,7 +171,10 @@ model PreProductionSample {
   owiId           String
   owi             String  //OrderWorkingInstruction @relation(fields: [owiId], references: [id])
 
-  rackId          String               // Storage rack reference (e.g., "1", "R-02")
+  //rackId          String               // Storage rack reference (e.g., "1", "R-02")
+  // 1-to-1 back-relation (FK lives on RackRetention)
+  rackRetention   RackRetention?
+  
   qcStatus        InternalQcStatus     @default(PENDING)
   isApproved      Boolean              @default(false) // Internal Management Sign-off
   isLocked        Boolean              @default(false)
@@ -448,6 +457,38 @@ model OrderWorkingInstruction {
   @@map("order_wip_instructions")
 }
 
+
+
+// PRODUCTION
+
+model RackRetention {
+  id               String              @id @default(uuid())
+  ppsId            String              @unique
+  pps              PreProductionSample @relation(fields: [ppsId], references: [id], onDelete: Restrict)
+
+  // Physical Storage & Counter-Sample Control
+  sampleCode       String              // Human-readable Sample ID / reference code
+  rackLocation     String              // e.g., "Rack-02 / Bin-B4"
+  custodianId      String              // Authenticated user ID responsible for physical custody
+  markingNotes     String?             // Physical tag/label/seal details on the counter-sample
+  photoUrls        String[]            // Photographic evidence before dispatch
+
+  // Retention Lifecycle & Audit
+  retainedAt       DateTime            @default(now())
+  isActive         Boolean             @default(true) // False if superseded by a revised PPS
+  supersededReason String?
+  createdBy        String
+  updatedBy        String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([rackLocation])
+  @@map("rack_retentions")
+}
+
+
+
+
 model ProductFamily {
   id             String     @id @default(uuid())
   orderId        String
@@ -479,6 +520,8 @@ model Products {
   @@index([orderId])
 }
 
+
+//MARKETING
 enum InquirySource {
   EMAIL
   WHATSAPP
