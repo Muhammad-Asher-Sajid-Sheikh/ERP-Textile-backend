@@ -8,4 +8,8 @@ uploads/
 
 /generated/prisma
 /src/generated/prisma
-/src/generated/
+/src/generated/models
+/src/generated
+
+/repomix-output.xml
+/prisma/ERP-Textile-backend.code-workspace
