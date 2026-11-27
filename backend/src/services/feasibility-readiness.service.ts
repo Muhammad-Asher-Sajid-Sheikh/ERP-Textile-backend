@@ -189,7 +189,8 @@ export async function feasibilityResponse(
   }
   if (
     assessment.conditions.length > 0 ||
-    engineering.uncertainties.length > 0
+    engineering.uncertainties.length > 0 ||
+    source.baseline.assumptions.length > 0
   ) {
     blockingReasons.push("CONDITIONS_OR_UNCERTAINTIES_PENDING");
   }
@@ -223,7 +224,7 @@ export async function feasibilityResponse(
       source.blockers.length === 0,
     usableAsPreliminaryCostingBasis: blockingReasons.length === 0,
     blockingReasons: [...new Set(blockingReasons)],
-    uncertainties: [...new Set(engineering.uncertainties)],
+    uncertainties: [...new Set([...engineering.uncertainties, ...source.baseline.assumptions])],
     dependencies,
     riskDecisions: [],
     riskDecisionAuthorityConfigured: false,

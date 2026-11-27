@@ -61,6 +61,10 @@ async function sourceRequirements(
   const assertions: z.infer<typeof baselineUpdateInput>["assertions"] = [];
   const openQuestions: string[] = [];
   const assumptions = [...review.assumptions];
+  const consultation = review.consultations.find((entry) => {
+    return entry.reviewRevision === review.revision;
+  });
+  if (consultation) assumptions.push(...consultation.assumptions);
   for (const item of review.items) {
     if (item.state === "ASSUMED" && item.value) {
       assumptions.push(`${item.label}: ${item.value}`);
@@ -126,7 +130,7 @@ async function validateAssertions(
         responses: {
           orderBy: { sequence: "desc" },
           take: 1,
-          select: { evidenceId: true, confirmation: true },
+          select: { evidenceId: true, confirmation: true, response: true },
         },
       },
     });
@@ -134,6 +138,7 @@ async function validateAssertions(
     if (
       !latest ||
       latest.evidenceId !== assertion.evidenceId ||
+      latest.response !== assertion.value ||
       (assertion.confirmed && latest.confirmation !== "WRITTEN_CONFIRMED")
     ) {
       throw new ApiError(
@@ -221,6 +226,7 @@ export async function feasibilityBaselineReadiness(
     const retained = baseline.assertions.some((assertion) => {
       return (
         assertion.key === sourceAssertion.key &&
+        assertion.value === sourceAssertion.value &&
         assertion.evidenceId === sourceAssertion.evidenceId &&
         assertion.confirmed
       );
@@ -229,6 +235,9 @@ export async function feasibilityBaselineReadiness(
       blockers.push("BASELINE_FACTS_MISSING");
       break;
     }
+  }
+  if (source.assumptions.some((assumption) => !baseline.assumptions.includes(assumption))) {
+    blockers.push("BASELINE_ASSUMPTIONS_MISSING");
   }
   return { baseline, blockers: [...new Set(blockers)] };
 }
@@ -438,6 +447,7 @@ export async function finalizeBaseline(
         !baseline.assertions.some((assertion) => {
           return (
             assertion.key === sourceAssertion.key &&
+            assertion.value === sourceAssertion.value &&
             assertion.evidenceId === sourceAssertion.evidenceId &&
             assertion.confirmed
           );
@@ -449,6 +459,13 @@ export async function finalizeBaseline(
         409,
         "Retain the currently verified source requirements in the baseline",
         "BASELINE_FACTS_MISSING",
+      );
+    }
+    if (source.assumptions.some((assumption) => !baseline.assumptions.includes(assumption))) {
+      throw new ApiError(
+        409,
+        "Retain source assumptions until a new technical review resolves them",
+        "BASELINE_ASSUMPTIONS_MISSING",
       );
     }
     if (input.outcome === "BASELINE_READY_FOR_FEASIBILITY") {

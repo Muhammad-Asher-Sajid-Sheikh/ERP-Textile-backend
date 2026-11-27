@@ -235,17 +235,19 @@ export async function submitReview(
     const consultation = review.consultations.find((entry) => {
       return entry.reviewRevision === review.revision;
     });
-    const needsProduction = review.items.some((item) => {
-      return item.needsProduction;
-    });
+    const needsProduction =
+      review.consultations.length > 0 ||
+      review.items.some((item) => {
+        return item.needsProduction;
+      });
     const positiveOutcome = [
       "COMPLETE_FOR_CLARIFICATION_BASELINE",
       "FEASIBLE_WITH_ASSUMPTIONS",
     ].includes(input.outcome);
     if (
       positiveOutcome &&
-      needsProduction &&
-      (!consultation || consultation.conclusion !== "SUPPORTED")
+      ((needsProduction && !consultation) ||
+        (consultation && consultation.conclusion !== "SUPPORTED"))
     ) {
       throw new ApiError(
         409,
@@ -265,9 +267,11 @@ export async function submitReview(
     }
     if (
       input.outcome === "COMPLETE_FOR_CLARIFICATION_BASELINE" &&
-      review.items.some((item) => {
-        return !["VERIFIED", "NOT_APPLICABLE"].includes(item.state);
-      })
+      (review.assumptions.length > 0 ||
+        (consultation?.assumptions.length ?? 0) > 0 ||
+        review.items.some((item) => {
+          return !["VERIFIED", "NOT_APPLICABLE"].includes(item.state);
+        }))
     ) {
       throw new ApiError(
         409,
@@ -278,6 +282,7 @@ export async function submitReview(
     if (
       input.outcome === "FEASIBLE_WITH_ASSUMPTIONS" &&
       review.assumptions.length === 0 &&
+      (consultation?.assumptions.length ?? 0) === 0 &&
       !review.items.some((item) => {
         return item.state === "ASSUMED";
       })
