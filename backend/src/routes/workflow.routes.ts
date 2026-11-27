@@ -3,6 +3,7 @@ import { checktoken } from "../middleware/auth.middleware.js";
 import { checkApproved, requireRole } from "../middleware/rbac.middleware.js";
 import * as workflow from "../controllers/workflow.controller.js";
 import * as feasibility from "../controllers/feasibility.controller.js";
+import * as ecs from "../controllers/ecs.controller.js";
 const router = Router();
 // Per-route guards keep the original WF-01 router's permissions unchanged.
 const read = [
@@ -18,6 +19,20 @@ const reviewRead = [
 const marketing = [checktoken, checkApproved, requireRole("MARKETING")];
 const merchandiser = [checktoken, checkApproved, requireRole("MERCHANDISE")];
 const production = [checktoken, checkApproved, requireRole("PRODUCTION")];
+
+const ecsRead = [checktoken, checkApproved, requireRole("MARKETING", "MANAGEMENT")];
+router.post("/inquiries/:id/ecs", ...marketing, ecs.create);
+router.get("/inquiries/:id/ecs", ...ecsRead, ecs.list);
+router.get("/inquiries/:id/ecs/:ecsId", ...ecsRead, ecs.get);
+router.get("/inquiries/:id/ecs/:ecsId/versions", ...ecsRead, ecs.listVersions);
+router.get("/inquiries/:id/ecs/:ecsId/versions/:versionId", ...ecsRead, ecs.getVersion);
+router.patch("/inquiries/:id/ecs/:ecsId/versions/:versionId", ...marketing, ecs.update);
+router.post("/inquiries/:id/ecs/:ecsId/versions/:versionId/calculate", ...marketing, ecs.calculate);
+router.post("/inquiries/:id/ecs/:ecsId/versions/:versionId/disposition", ...marketing, ecs.disposition);
+router.post("/inquiries/:id/ecs/:ecsId/versions/:versionId/submit", ...marketing, ecs.submit);
+router.post("/inquiries/:id/ecs/:ecsId/versions/:versionId/revise", ...marketing, ecs.revise);
+router.post("/inquiries/:id/ecs/:ecsId/versions/:versionId/alternatives", ...marketing, ecs.alternative);
+router.get("/inquiries/:id/ecs/:ecsId/versions/:versionId/cost-items", ...read, ecs.costItems);
 
 // WF-04 keeps Production's engineering conclusion separate from the completeness review.
 router.post("/inquiries/:id/feasibilities", ...marketing, feasibility.create);
