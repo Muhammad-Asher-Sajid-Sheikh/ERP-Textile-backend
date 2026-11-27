@@ -13,6 +13,7 @@ import {
   type BusinessContext,
 } from "./business-audit.service.js";
 import { evidenceSelect, prepareEvidence } from "./evidence.service.js";
+import { currentActor, requireMarketingOwner, withWorkflow } from "./workflow-access.service.js";
 import type {
   CreateInquiry,
   UpdateInquiry,
@@ -86,11 +87,10 @@ const detailInclude = {
   },
 } satisfies Prisma.InquiryInclude;
 const scope = (reader: Reader): Prisma.InquiryWhereInput => {
-  return reader.role === "MERCHANDISE"
-    ? {
-        merchandiserId: reader.id,
-      }
-    : {};
+  if (reader.role === "MARKETING") return { createdById: reader.id };
+  if (reader.role === "MERCHANDISE") return { merchandiserId: reader.id };
+  if (reader.role === "MANAGEMENT") return {};
+  throw new ApiError(403, "Inquiry access is not permitted", "PERMISSION_DENIED");
 };
 async function validateMerchandiser(tx: Prisma.TransactionClient, id: string) {
   const user = await tx.user.findFirst({
@@ -122,36 +122,13 @@ function assertEditable(inquiry: Inquiry) {
 }
 async function withInquiry<T>(
   id: string,
+  context: BusinessContext,
   work: (tx: Prisma.TransactionClient, inquiry: Inquiry) => Promise<T>,
 ) {
-  return prisma.$transaction(
-    async (tx) => {
-      const identity = await tx.inquiry.findUnique({
-        where: {
-          id,
-        },
-        select: {
-          customerId: true,
-        },
-      });
-      if (!identity) {
-        throw new ApiError(404, "Inquiry not found", "INQUIRY_NOT_FOUND");
-      }
-      // The same lock is used for customer maintenance, registration and inquiry mutations.
-      // It makes cross-inquiry duplicate checks atomic and gives a consistent lock order.
-      await tx.$queryRaw`SELECT "id" FROM "Customer" WHERE "id" = ${identity.customerId} FOR UPDATE`;
-      const inquiry = await tx.inquiry.findUniqueOrThrow({
-        where: {
-          id,
-        },
-      });
-      return work(tx, inquiry);
-    },
-    {
-      maxWait: 10000,
-      timeout: 15000,
-    },
-  );
+  return withWorkflow(id, context, async (tx, inquiry, user) => {
+    requireMarketingOwner(inquiry, user);
+    return work(tx, inquiry);
+  });
 }
 async function statusChange(
   tx: Prisma.TransactionClient,
@@ -203,6 +180,11 @@ export async function createInquiry(
   return prisma.$transaction(
     async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Customer" WHERE "id" = ${input.customerId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${context.actorId} FOR SHARE`;
+      const user = await currentActor(tx, context);
+      if (user.role !== "MARKETING") {
+        throw new ApiError(403, "Only Marketing can register inquiries", "PERMISSION_DENIED");
+      }
       const customer = await tx.customer.findUnique({
         where: {
           id: input.customerId,
@@ -434,7 +416,7 @@ export async function updateInquiry(
   input: UpdateInquiry,
   context: BusinessContext,
 ) {
-  return withInquiry(id, async (tx, inquiry) => {
+  return withInquiry(id, context, async (tx, inquiry) => {
     assertEditable(inquiry);
     if (input.merchandiserId) {
       await validateMerchandiser(tx, input.merchandiserId);
@@ -475,7 +457,7 @@ export async function addEvidence(
   context: BusinessContext,
 ) {
   const prepared = prepareEvidence(input);
-  return withInquiry(id, async (tx, inquiry) => {
+  return withInquiry(id, context, async (tx, inquiry) => {
     // Evidence remains append-only even after closure so later original communications are not lost.
     if (
       input.correctsEvidenceId &&
@@ -521,7 +503,7 @@ export async function acknowledge(
   input: AcknowledgementInput,
   context: BusinessContext,
 ) {
-  return withInquiry(id, async (tx, inquiry) => {
+  return withInquiry(id, context, async (tx, inquiry) => {
     if (!["REGISTERED", "ACKNOWLEDGED"].includes(inquiry.status)) {
       throw new ApiError(
         409,
@@ -581,7 +563,7 @@ export async function linkDuplicate(
       "INVALID_DUPLICATE",
     );
   }
-  return withInquiry(id, async (tx, inquiry) => {
+  return withInquiry(id, context, async (tx, inquiry) => {
     assertEditable(inquiry);
     const target = await tx.inquiry.findUnique({
       where: {
@@ -651,7 +633,7 @@ export async function transition(
   input: z.infer<typeof transitionInput>,
   context: BusinessContext,
 ) {
-  return withInquiry(id, async (tx, inquiry) => {
+  return withInquiry(id, context, async (tx, inquiry) => {
     const allowed: Record<InquiryStatus, readonly InquiryStatus[]> = {
       RECEIVED: [],
       REGISTERED: ["ON_HOLD", "CLOSED"],

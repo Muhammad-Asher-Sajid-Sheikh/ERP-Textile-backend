@@ -2,7 +2,9 @@ import type { ErrorRequestHandler } from "express";
 import { Prisma } from "../generated/client.js";
 import { ZodError } from "zod";
 import { ApiError } from "../utils/ApiError.js";
-export const errorHandler: ErrorRequestHandler = (
+import { prisma } from "../lib/prisma.js";
+import { businessAudit } from "../services/business-audit.service.js";
+export const errorHandler: ErrorRequestHandler = async (
   error: unknown,
   req,
   res,
@@ -82,6 +84,32 @@ export const errorHandler: ErrorRequestHandler = (
       [],
       false,
     );
+  }
+  const requestPath = req.originalUrl.split("?")[0] ?? "";
+  const workflowMutation =
+    ["POST", "PATCH", "PUT", "DELETE"].includes(req.method) &&
+    /^\/api\/(marketing\/inquiries|management\/(inquiries|provisional-review-requests))(\/|$)/.test(requestPath);
+  if (req.user && workflowMutation && [403, 404, 409, 422].includes(failure.statusCode)) {
+    const auditContext = { actorId: req.user.id, requestId: req.correlationId };
+    const blockedAction = { method: req.method, code: failure.code, statusCode: failure.statusCode };
+    const reason = failure.message;
+    try {
+      // The rejected business transaction has rolled back; retain its denial separately.
+      await prisma.$transaction(async (tx) => {
+        await businessAudit(
+          tx,
+          auditContext,
+          "WORKFLOW_ACTION_BLOCKED",
+          "WorkflowRequest",
+          requestPath,
+          undefined,
+          blockedAction,
+          reason,
+        );
+      });
+    } catch {
+      console.error({ event: "workflow_denial_audit_failed", requestId: req.correlationId });
+    }
   }
   res.status(failure.statusCode).json({
     ...failure.compatibility,
