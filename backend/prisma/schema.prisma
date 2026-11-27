@@ -47,6 +47,10 @@ enum AuditActionType {
 }
 
 model User {
+  estimatedCostSheets EstimatedCostSheet[]
+  ecsVersionsCreated EcsVersion[] @relation("EcsCreator")
+  ecsVersionsPrepared EcsVersion[] @relation("EcsPreparer")
+  ecsRatesReviewed EcsCostItem[] @relation("EcsRateReviewer")
   feasibilitiesCreated FeasibilityAssessment[] @relation("FeasibilityCreator")
   feasibilitiesAssigned FeasibilityAssessment[] @relation("FeasibilityReviewer")
   feasibilitiesSubmitted FeasibilityAssessment[] @relation("FeasibilitySubmitter")
@@ -574,6 +578,7 @@ model IrnSequence {
 }
 
 model Inquiry {
+  estimatedCostSheet EstimatedCostSheet?
   feasibilities FeasibilityAssessment[]
   id                   String                       @id @default(uuid())
   irn                  String                       @unique
@@ -886,6 +891,7 @@ model ClarificationResponse {
 }
 
 model RequirementBaselineVersion {
+  ecsVersions EcsVersion[]
   feasibilities FeasibilityAssessment[]
   @@unique([id, inquiryId])
   sourceFingerprint String
@@ -993,6 +999,7 @@ enum FeasibilityConsumptionBasis {
 }
 
 model FeasibilityAssessment {
+  ecsVersions EcsVersion[]
   id                   String                     @id @default(uuid())
   inquiryId            String
   inquiry              Inquiry                    @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
@@ -1028,6 +1035,7 @@ model FeasibilityAssessment {
 }
 
 model FeasibilityArticle {
+  ecsArticles EcsArticle[]
   riskAssessment        String?
   id                    String                 @id @default(uuid())
   assessmentId          String
@@ -1056,6 +1064,7 @@ model FeasibilityArticle {
 }
 
 model FeasibilityMaterial {
+  ecsCostItems EcsCostItem[]
   applicableAdjustments         String[]
   adjustmentApplicabilityReason String?
   id                            String                       @id @default(uuid())
@@ -1095,6 +1104,7 @@ model FeasibilityMaterial {
 }
 
 model FeasibilityProcess {
+  ecsCostItems EcsCostItem[]
   id                    String                @id @default(uuid())
   articleId             String
   article               FeasibilityArticle    @relation(fields: [articleId], references: [id], onDelete: Restrict)
@@ -1121,4 +1131,192 @@ model FeasibilityRisk {
   requiresManagementAcceptance Boolean
 
   @@index([articleId])
+}
+
+enum EcsStatus {
+  DRAFT_DATA_PENDING
+  PRELIMINARY_PROVISIONAL
+  PRICE_DEFERRED
+  READY_FOR_APPROVAL
+  SUPERSEDED
+}
+
+enum EcsCostCategory {
+  YARN
+  FABRIC
+  PROCESSING
+  LABOUR
+  CONFECTION
+  VALUE_ADDITION
+  TRIM_ACCESSORY
+  PACKING
+  OVERHEAD
+  FREIGHT
+  FINANCE
+  RISK_ALLOWANCE
+  OTHER
+}
+
+enum EcsChargingBasis {
+  QUANTITY_RATE
+  FIXED_ORDER
+  PERCENTAGE
+}
+
+enum EcsQuantityBasis {
+  INHERITED_CONSUMPTION
+  INHERITED_QUANTITY
+  EXPLICIT
+}
+
+enum EcsApplicability {
+  CHARGE
+  INCLUDED_IN_OTHER
+  NOT_APPLICABLE
+}
+
+enum EcsRateClassification {
+  UNREVIEWED
+  CURRENT_WORKING
+  HISTORICAL
+  REVALIDATION_REQUIRED
+}
+
+model EstimatedCostSheet {
+  id          String       @id @default(uuid())
+  inquiryId   String       @unique
+  inquiry     Inquiry      @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  createdById String
+  createdBy   User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  versions    EcsVersion[]
+}
+
+model EcsVersion {
+  id                     String                     @id @default(uuid())
+  ecsId                  String
+  ecs                    EstimatedCostSheet         @relation(fields: [ecsId], references: [id], onDelete: Restrict)
+  baselineVersionId      String
+  baselineVersion        RequirementBaselineVersion @relation(fields: [baselineVersionId], references: [id], onDelete: Restrict)
+  feasibilityId          String
+  feasibility            FeasibilityAssessment      @relation(fields: [feasibilityId], references: [id], onDelete: Restrict)
+  version                Int
+  revision               Int                        @default(1)
+  previousVersionId      String?
+  previousVersion        EcsVersion?                @relation("EcsRevision", fields: [previousVersionId], references: [id], onDelete: Restrict)
+  revisions              EcsVersion[]               @relation("EcsRevision")
+  alternativeKey         String
+  alternativeDescription String?
+  status                 EcsStatus                  @default(DRAFT_DATA_PENDING)
+  costingCurrency        String
+  quotationCurrency      String
+  // Number of costing-currency units for one quotation-currency unit.
+  exchangeRate           Decimal?                   @db.Decimal(38, 12)
+  exchangeRateSource     String?
+  exchangeRateDate       DateTime?
+  paymentTerms           String?
+  commercialAssumptions  String[]
+  outstandingConditions  String[]
+  costCoverageNotes      String?
+  notes                  String?
+  changeReason           String
+  dispositionReason      String?
+  preparedAt             DateTime?
+  preparedById           String?
+  preparedBy             User?                      @relation("EcsPreparer", fields: [preparedById], references: [id], onDelete: Restrict)
+  submissionReason       String?
+  createdById            String
+  createdBy              User                       @relation("EcsCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  calculatedRevision     Int?
+  calculatedAt           DateTime?
+  calculationSnapshot    Json?
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+  articles               EcsArticle[]
+
+  @@unique([ecsId, version])
+  @@index([ecsId, alternativeKey, version])
+  @@index([baselineVersionId])
+  @@index([feasibilityId])
+  @@index([previousVersionId])
+  @@index([createdById])
+  @@index([preparedById])
+}
+
+model EcsArticle {
+  id                   String                 @id @default(uuid())
+  ecsVersionId         String
+  ecsVersion           EcsVersion             @relation(fields: [ecsVersionId], references: [id], onDelete: Restrict)
+  feasibilityArticleId String
+  feasibilityArticle   FeasibilityArticle     @relation(fields: [feasibilityArticleId], references: [id], onDelete: Restrict)
+  articleCode          String
+  productName          String
+  productFamily        String
+  productKind          FeasibilityProductKind
+  quantity             Decimal?               @db.Decimal(38, 12)
+  quantityUnit         String?
+  engineeringSnapshot  Json
+  proposedSellingPrice Decimal?               @db.Decimal(38, 12)
+  pricingNotes         String?
+  assumptions          String[]
+  costItems            EcsCostItem[]
+
+  @@unique([ecsVersionId, feasibilityArticleId])
+  @@unique([ecsVersionId, articleCode])
+  @@index([feasibilityArticleId])
+}
+
+model EcsCostItem {
+  id                     String                 @id @default(uuid())
+  ecsArticleId           String
+  ecsArticle             EcsArticle             @relation(fields: [ecsArticleId], references: [id], onDelete: Restrict)
+  feasibilityMaterialId  String?
+  feasibilityMaterial    FeasibilityMaterial?   @relation(fields: [feasibilityMaterialId], references: [id], onDelete: Restrict)
+  feasibilityProcessId   String?
+  feasibilityProcess     FeasibilityProcess?    @relation(fields: [feasibilityProcessId], references: [id], onDelete: Restrict)
+  code                   String
+  name                   String
+  category               EcsCostCategory
+  componentRole          String?
+  materialSpecification  Json?
+  chargingBasis          EcsChargingBasis?
+  quantityBasis          EcsQuantityBasis?
+  quantity               Decimal?               @db.Decimal(38, 12)
+  quantityUnit           String?
+  quantityBasisReference String?
+  allowStandardUnitConversion Boolean @default(false)
+  orderCostReference     String?
+  allocationPercent      Decimal?               @db.Decimal(38, 12)
+  unitRate               Decimal?               @db.Decimal(38, 12)
+  rateUnit               String?
+  rateCurrency           String?
+  rateSource             String?
+  rateSourceType         String?
+  rateSourceAttribution  String?
+  rateDate               DateTime?
+  rateClassification     EcsRateClassification  @default(UNREVIEWED)
+  rateReviewReason       String?
+  rateReviewedAt         DateTime?
+  rateReviewedById       String?
+  rateReviewedBy         User?                  @relation("EcsRateReviewer", fields: [rateReviewedById], references: [id], onDelete: Restrict)
+  percentage             Decimal?               @db.Decimal(38, 12)
+  percentageBaseItemIds  String[]
+  applicability          EcsApplicability        @default(CHARGE)
+  applicabilityReason    String?
+  includedInItemId       String?
+  includedInItem         EcsCostItem?            @relation("EcsIncludedCost", fields: [includedInItemId, ecsArticleId], references: [id, ecsArticleId], onDelete: Restrict)
+  includedItems          EcsCostItem[]           @relation("EcsIncludedCost")
+  formulaDependency      String?
+  assumptions            String[]
+  notes                  String?
+
+  @@unique([id, ecsArticleId])
+  @@unique([ecsArticleId, code])
+  @@unique([ecsArticleId, feasibilityMaterialId])
+  @@unique([ecsArticleId, feasibilityProcessId])
+  @@index([feasibilityMaterialId])
+  @@index([feasibilityProcessId])
+  @@index([includedInItemId, ecsArticleId])
+  @@index([rateReviewedById])
 }
