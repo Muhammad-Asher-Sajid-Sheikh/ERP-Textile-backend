@@ -259,47 +259,6 @@ model TimeActionStage {
 }
 
 
-// Broker
-model Broker {
-  id               String                   @id @default(uuid())
-  brokerName       String                   // Name of the broker, agent, or third-party
-  contactPerson    String?
-  email            String?
-  phone            String?
-  
-  // Relation to broker tracking records
-  trackingRecords  BrokerThirdPartyRecord[]
-
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
-
-  @@map("brokers")
-}
-
-model BrokerThirdPartyRecord {
-  id            String   @id @default(uuid())
-  icnNo         String
-  
-  brokerId      String
-  broker        Broker   @relation(fields: [brokerId], references: [id])
-  
-  stage         String   // e.g., Commission Agreement, Sample Dispatch, Payment Clearance
-  priceCost     Float    // Commission amount or agreed financial cost
-  
-  dateToSent    DateTime?
-  dateToReceive DateTime?
-  
-  isApproved    Boolean  @default(false) // Management sign-off flag
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([icnNo])
-  @@index([brokerId])
-  @@map("broker_third_party_records")
-}
-
-
 //Bill Of Materials
 
 enum BomCategory {
@@ -459,6 +418,79 @@ model OrderWorkingInstruction {
 
 
 // PRODUCTION
+
+// Broker
+enum BrokerPartyType {
+  BROKER
+  AGENT
+  THIRD_PARTY
+}
+
+model Broker {
+  id              String                   @id @default(uuid())
+  brokerName      String                   // Name of the broker, agent, or third-party
+  partyType       BrokerPartyType          @default(BROKER)
+  contactPerson   String?
+  email           String?
+  phone           String?
+
+  // Relation to broker tracking records
+  trackingRecords BrokerThirdPartyRecord[]
+
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@map("brokers")
+}
+
+model BrokerThirdPartyRecord {
+  id            String   @id @default(uuid())
+  icnNo         String
+  
+  brokerId      String
+  broker        Broker   @relation(fields: [brokerId], references: [id])
+  
+  stage         String   // e.g., Commission Agreement, Sample Dispatch, Payment Clearance
+  priceCost     Float    // Commission amount or agreed financial cost
+  
+  dateToSent    DateTime?
+  dateToReceive DateTime?
+  
+  isApproved    Boolean  @default(false) // Management sign-off flag
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([icnNo])
+  @@index([brokerId])
+  @@map("broker_third_party_records")
+}
+
+enum StoreInventoryStatus {
+  RECEIVED
+  QA_HOLD
+  ACCEPTED_AVAILABLE
+  RESERVED
+  ISSUED
+  CONSUMED
+}
+
+model Store {
+  id           String               @id @default(uuid())
+  icnNo        String?
+  materialType String
+  quantity     Float
+  status       StoreInventoryStatus @default(RECEIVED)
+
+  createdBy    String?
+  updatedBy    String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([icnNo])
+  @@index([status])
+  @@map("store_inventory")
+}
 
 model RackRetention {
   id               String              @id @default(uuid())

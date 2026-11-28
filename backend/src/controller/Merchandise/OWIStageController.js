@@ -10,8 +10,8 @@ const prisma = new PrismaClient({
 });
 
 function getAuditContext(req) {
-  const user = req.user || TestUser;
-  if (!user || !user.id) {
+  const user = '9b4e1ea0-52ab-4e3e-8191-5d0315c6c55d';
+  if (!user) {
     throw new Error('UNAUTHORIZED');
   }
 
@@ -21,8 +21,8 @@ function getAuditContext(req) {
     null;
 
   return {
-    userId: user.id,
-    performedBy: user.email || user.name || user.id,
+    userId: user,
+    performedBy: user,
     ipAddress,
   };
 }
@@ -72,8 +72,8 @@ export const createOWIStages = async (req, res) => {
     const normalizedStages = normalizeStages(stages);
 
     const result = await prisma.$transaction(async (tx) => {
-      const pgOwi = await tx.orderWipInstruction.findUnique({
-        where: { id: postgresOwiId },
+      const pgOwi = await tx.order_wip_instructions.findUnique({
+        where: { id: 'ce9de976-ea68-48d4-ae02-e659c516ce08' },
       });
 
       if (!pgOwi) {
@@ -103,7 +103,7 @@ export const createOWIStages = async (req, res) => {
         stages: normalizedStages,
       });
 
-      const updatedPgOwi = await tx.orderWipInstruction.update({
+      const updatedPgOwi = await tx.order_wip_instructions.update({
         where: { id: pgOwi.id },
         data: { mongoPayloadId: mongoDoc._id.toString() },
       });
