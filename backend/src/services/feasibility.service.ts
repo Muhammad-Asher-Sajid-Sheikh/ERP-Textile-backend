@@ -25,7 +25,7 @@ import type {
   FeasibilityRiskDecision,
 } from "../validators/feasibility.validator.js";
 
-const assessmentInclude = {
+export const assessmentInclude = {
   createdBy: { select: personSelect },
   productionReviewer: { select: personSelect },
   submittedBy: { select: personSelect },
