@@ -47,6 +47,9 @@ enum AuditActionType {
 }
 
 model User {
+  feasibilitiesCreated FeasibilityAssessment[] @relation("FeasibilityCreator")
+  feasibilitiesAssigned FeasibilityAssessment[] @relation("FeasibilityReviewer")
+  feasibilitiesSubmitted FeasibilityAssessment[] @relation("FeasibilitySubmitter")
   technicalReviewsSubmitted InquiryTechnicalReview[] @relation("ReviewSubmitter")
   id                        String                   @id @default(uuid())
   email                     String                   @unique
@@ -571,6 +574,7 @@ model IrnSequence {
 }
 
 model Inquiry {
+  feasibilities FeasibilityAssessment[]
   id                   String                       @id @default(uuid())
   irn                  String                       @unique
   irnYear              Int
@@ -882,6 +886,8 @@ model ClarificationResponse {
 }
 
 model RequirementBaselineVersion {
+  feasibilities FeasibilityAssessment[]
+  @@unique([id, inquiryId])
   sourceFingerprint String
   id                String                       @id @default(uuid())
   inquiryId         String
@@ -959,4 +965,160 @@ model ProvisionalReviewDecision {
   recordedById String
   recordedBy   User                     @relation(fields: [recordedById], references: [id], onDelete: Restrict)
   createdAt    DateTime                 @default(now())
+}
+
+enum FeasibilityOutcome {
+  FEASIBLE
+  FEASIBLE_WITH_CONDITIONS
+  ALTERNATIVE_REQUIRED
+  TRIAL_SAMPLE_REQUIRED
+  NOT_FEASIBLE
+}
+
+enum FeasibilityProductKind {
+  TOWEL
+  WOVEN_MADE_UP
+  OTHER
+}
+
+enum FeasibilityExecution {
+  INTERNAL
+  OUTSOURCED
+}
+
+enum FeasibilityConsumptionBasis {
+  FINISHED_DYED_WEIGHT
+  FABRIC_WIDTH
+  OTHER
+}
+
+model FeasibilityAssessment {
+  id                   String                     @id @default(uuid())
+  inquiryId            String
+  inquiry              Inquiry                    @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  baselineVersionId    String
+  baselineVersion      RequirementBaselineVersion @relation(fields: [baselineVersionId, inquiryId], references: [id, inquiryId], onDelete: Restrict)
+  version              Int
+  revision             Int                        @default(1)
+  previousVersionId    String?
+  previousVersion      FeasibilityAssessment?     @relation("FeasibilityRevision", fields: [previousVersionId], references: [id], onDelete: Restrict)
+  revisions            FeasibilityAssessment[]    @relation("FeasibilityRevision")
+  createdById          String
+  createdBy            User                       @relation("FeasibilityCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  productionReviewerId String
+  productionReviewer   User                       @relation("FeasibilityReviewer", fields: [productionReviewerId], references: [id], onDelete: Restrict)
+  submittedById        String?
+  submittedBy          User?                      @relation("FeasibilitySubmitter", fields: [submittedById], references: [id], onDelete: Restrict)
+  submittedAt          DateTime?
+  outcome              FeasibilityOutcome?
+  submissionReason     String?
+  changeReason         String
+  conditions           String[]
+  assumptions          String[]
+  uncertainties        String[]
+  notes                String?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  articles             FeasibilityArticle[]
+
+  @@unique([inquiryId, version])
+  @@index([productionReviewerId, submittedAt])
+  @@index([baselineVersionId])
+  @@index([previousVersionId])
+}
+
+model FeasibilityArticle {
+  riskAssessment        String?
+  id                    String                 @id @default(uuid())
+  assessmentId          String
+  assessment            FeasibilityAssessment  @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  code                  String
+  name                  String
+  productFamily         String
+  productKind           FeasibilityProductKind
+  quantity              Decimal?               @db.Decimal(24, 8)
+  quantityUnit          String?
+  technicalAttributes   Json
+  internalCapability    String?
+  externalCapability    String?
+  supplierAvailability  String?
+  sampleFeasibility     String?
+  capacityAssessment    String?
+  estimatedLeadTimeDays Decimal?               @db.Decimal(24, 8)
+  capabilityLimitations String[]
+  assumptions           String[]
+  uncertainties         String[]
+  materials             FeasibilityMaterial[]
+  processes             FeasibilityProcess[]
+  risks                 FeasibilityRisk[]
+
+  @@unique([assessmentId, code])
+}
+
+model FeasibilityMaterial {
+  applicableAdjustments         String[]
+  adjustmentApplicabilityReason String?
+  id                            String                       @id @default(uuid())
+  articleId                     String
+  article                       FeasibilityArticle           @relation(fields: [articleId], references: [id], onDelete: Restrict)
+  code                          String
+  name                          String
+  materialType                  String
+  composition                   String?
+  construction                  String?
+  colour                        String?
+  yarnCount                     String?
+  quantity                      Decimal?                     @db.Decimal(24, 8)
+  quantityUnit                  String?
+  consumptionBasis              FeasibilityConsumptionBasis?
+  consumptionQuantity           Decimal?                     @db.Decimal(24, 8)
+  consumptionUnit               String?
+  perQuantity                   Decimal?                     @db.Decimal(24, 8)
+  perUnit                       String?
+  basisDescription              String?
+  fabricWidth                   Decimal?                     @db.Decimal(24, 8)
+  fabricWidthUnit               String?
+  finishedWeight                Decimal?                     @db.Decimal(24, 8)
+  finishedWeightUnit            String?
+  gsm                           Decimal?                     @db.Decimal(24, 8)
+  allowancePercent              Decimal?                     @db.Decimal(24, 8)
+  processLossPercent            Decimal?                     @db.Decimal(24, 8)
+  shrinkagePercent              Decimal?                     @db.Decimal(24, 8)
+  wastagePercent                Decimal?                     @db.Decimal(24, 8)
+  minimumProcessingQuantity     Decimal?                     @db.Decimal(24, 8)
+  minimumProcessingUnit         String?
+  technicalAttributes           Json
+  assumptions                   String[]
+  uncertainties                 String[]
+
+  @@unique([articleId, code])
+}
+
+model FeasibilityProcess {
+  id                    String                @id @default(uuid())
+  articleId             String
+  article               FeasibilityArticle    @relation(fields: [articleId], references: [id], onDelete: Restrict)
+  sequence              Int
+  operation             String
+  execution             FeasibilityExecution?
+  capability            String?
+  processor             String?
+  estimatedLeadTimeDays Decimal?              @db.Decimal(24, 8)
+  technicalDetails      String?
+  assumptions           String[]
+  limitations           String[]
+
+  @@unique([articleId, sequence])
+}
+
+model FeasibilityRisk {
+  id                           String             @id @default(uuid())
+  articleId                    String
+  article                      FeasibilityArticle @relation(fields: [articleId], references: [id], onDelete: Restrict)
+  description                  String
+  mitigation                   String
+  alternativeRoute             String?
+  requiresManagementAcceptance Boolean
+
+  @@index([articleId])
 }

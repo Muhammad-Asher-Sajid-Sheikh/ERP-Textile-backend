@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import type { z } from "zod";
-import type { Prisma } from "../generated/client.js";
 import { ApiError } from "../utils/ApiError.js";
 import { businessAudit, auditValues } from "./business-audit.service.js";
 import { findReview } from "./technical-review.service.js";
+import type { Inquiry, Prisma } from "../generated/client.js";
 import {
   linkedEvidence,
   requireMarketingOwner,
@@ -143,6 +143,94 @@ async function validateAssertions(
       );
     }
   }
+}
+
+// WF-04 rechecks the same sources that were used to freeze the baseline.
+export async function feasibilityBaselineReadiness(
+  tx: Prisma.TransactionClient,
+  inquiry: Inquiry,
+  baselineVersionId: string,
+) {
+  const baseline = await findBaseline(tx, inquiry.id, baselineVersionId);
+  const blockers: string[] = [];
+  if (["ON_HOLD", "CLOSED", "DUPLICATE_LINKED"].includes(inquiry.status)) {
+    blockers.push("INQUIRY_NOT_AVAILABLE");
+  }
+  if (
+    !baseline.frozenAt ||
+    baseline.outcome !== "BASELINE_READY_FOR_FEASIBILITY"
+  ) {
+    blockers.push("BASELINE_NOT_READY");
+  }
+  const latestBaseline = await tx.requirementBaselineVersion.findFirst({
+    where: { inquiryId: inquiry.id, frozenAt: { not: null } },
+    orderBy: { version: "desc" },
+    select: { id: true },
+  });
+  if (latestBaseline?.id !== baseline.id) {
+    blockers.push("BASELINE_SUPERSEDED");
+  }
+  const source = await sourceRequirements(tx, inquiry.id, baseline.reviewId);
+  if (source.fingerprint !== baseline.sourceFingerprint) {
+    blockers.push("BASELINE_SOURCE_CHANGED");
+  }
+  const latestReview = await tx.inquiryTechnicalReview.findFirst({
+    where: { inquiryId: inquiry.id },
+    orderBy: { version: "desc" },
+    select: { id: true },
+  });
+  if (latestReview?.id !== baseline.reviewId) {
+    blockers.push("TECHNICAL_REVIEW_CHANGED");
+  }
+  const customerHolds = await tx.customerClarification.count({
+    where: { inquiryId: inquiry.id, customerHold: true },
+  });
+  if (customerHolds > 0) {
+    blockers.push("CUSTOMER_HOLD");
+  }
+  if (
+    source.openQuestions.length > 0 ||
+    baseline.openQuestions.length > 0 ||
+    baseline.assertions.length === 0
+  ) {
+    blockers.push("BASELINE_OPEN_POINTS");
+  }
+  for (const assertion of baseline.assertions) {
+    if (!assertion.confirmed) {
+      blockers.push("BASELINE_UNCONFIRMED");
+      break;
+    }
+  }
+  try {
+    await validateAssertions(tx, inquiry.id, baseline.assertions);
+  } catch (error) {
+    if (
+      error instanceof ApiError &&
+      [
+        "INVALID_EVIDENCE_REFERENCE",
+        "WRITTEN_EVIDENCE_REQUIRED",
+        "BASELINE_SOURCE_CHANGED",
+      ].includes(error.code)
+    ) {
+      blockers.push(error.code);
+    } else {
+      throw error;
+    }
+  }
+  for (const sourceAssertion of source.assertions) {
+    const retained = baseline.assertions.some((assertion) => {
+      return (
+        assertion.key === sourceAssertion.key &&
+        assertion.evidenceId === sourceAssertion.evidenceId &&
+        assertion.confirmed
+      );
+    });
+    if (sourceAssertion.confirmed && !retained) {
+      blockers.push("BASELINE_FACTS_MISSING");
+      break;
+    }
+  }
+  return { baseline, blockers: [...new Set(blockers)] };
 }
 function baselineResponse(
   baseline: Awaited<ReturnType<typeof findBaseline>>,

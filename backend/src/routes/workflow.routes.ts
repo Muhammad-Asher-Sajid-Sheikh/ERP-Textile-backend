@@ -2,6 +2,7 @@ import { Router } from "express";
 import { checktoken } from "../middleware/auth.middleware.js";
 import { checkApproved, requireRole } from "../middleware/rbac.middleware.js";
 import * as workflow from "../controllers/workflow.controller.js";
+import * as feasibility from "../controllers/feasibility.controller.js";
 const router = Router();
 // Per-route guards keep the original WF-01 router's permissions unchanged.
 const read = [
@@ -16,6 +17,31 @@ const reviewRead = [
 ];
 const marketing = [checktoken, checkApproved, requireRole("MARKETING")];
 const merchandiser = [checktoken, checkApproved, requireRole("MERCHANDISE")];
+const production = [checktoken, checkApproved, requireRole("PRODUCTION")];
+
+// WF-04 keeps Production's engineering conclusion separate from the completeness review.
+router.post("/inquiries/:id/feasibilities", ...marketing, feasibility.create);
+router.get("/inquiries/:id/feasibilities", ...reviewRead, feasibility.list);
+router.get(
+  "/inquiries/:id/feasibilities/:feasibilityId",
+  ...reviewRead,
+  feasibility.get,
+);
+router.patch(
+  "/inquiries/:id/feasibilities/:feasibilityId",
+  ...production,
+  feasibility.update,
+);
+router.post(
+  "/inquiries/:id/feasibilities/:feasibilityId/submit",
+  ...production,
+  feasibility.submit,
+);
+router.post(
+  "/inquiries/:id/feasibilities/:feasibilityId/revise",
+  ...marketing,
+  feasibility.revise,
+);
 // WF-02: the assigned merchandiser submits the review; Production owns its findings.
 router.post(
   "/inquiries/:id/technical-reviews",

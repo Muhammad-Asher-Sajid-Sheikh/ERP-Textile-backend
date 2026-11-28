@@ -104,7 +104,7 @@ export async function withWorkflow<T>(
     inquiry: Inquiry,
     user: Awaited<ReturnType<typeof currentActor>>,
   ) => Promise<T>,
-  allowProduction = false,
+  allowProduction: boolean | "FEASIBILITY" = false,
 ) {
   return prisma.$transaction(
     async (tx) => {
@@ -122,15 +122,25 @@ export async function withWorkflow<T>(
         where: { id: inquiryId },
       });
       const user = await currentActor(tx, context);
+      let productionCanRead = false;
+      if (user.role === "PRODUCTION") {
+        if (allowProduction === "FEASIBILITY") {
+          productionCanRead =
+            (await tx.feasibilityAssessment.count({
+              where: { inquiryId, productionReviewerId: user.id },
+            })) > 0;
+        } else if (allowProduction === true) {
+          productionCanRead =
+            (await tx.inquiryTechnicalReview.count({
+              where: { inquiryId, productionReviewerId: user.id },
+            })) > 0;
+        }
+      }
       const canRead =
         user.role === "MANAGEMENT" ||
         (user.role === "MARKETING" && inquiry.createdById === user.id) ||
         (user.role === "MERCHANDISE" && inquiry.merchandiserId === user.id) ||
-        (allowProduction &&
-          user.role === "PRODUCTION" &&
-          (await tx.inquiryTechnicalReview.count({
-            where: { inquiryId, productionReviewerId: user.id },
-          })) > 0);
+        productionCanRead;
       if (!canRead) {
         throw new ApiError(404, "Inquiry not found", "INQUIRY_NOT_FOUND");
       }
